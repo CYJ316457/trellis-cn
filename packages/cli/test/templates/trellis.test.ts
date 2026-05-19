@@ -86,6 +86,26 @@ describe("trellis template constants", () => {
     expect(workflowMdTemplate).toContain("#");
   });
 
+  it("workflowMdTemplate includes Chinese user-facing guidance while preserving workflow-state markers", () => {
+    expect(workflowMdTemplate).toContain("开发工作流");
+    expect(workflowMdTemplate).toContain("当前没有活动任务");
+    expect(workflowMdTemplate).toContain("[workflow-state:no_task]");
+    expect(workflowMdTemplate).toContain("[/workflow-state:no_task]");
+    expect(workflowMdTemplate).toContain("[workflow-state:in_progress]");
+    expect(workflowMdTemplate).toContain("[/workflow-state:in_progress]");
+  });
+
+  it("workflowMdTemplate includes step logging, spec read/write logging, and SVN skip guidance", () => {
+    expect(workflowMdTemplate).toContain("📌步骤 X.Y 开始执行");
+    expect(workflowMdTemplate).toContain("✅步骤 X.Y 执行完成");
+    expect(workflowMdTemplate).toContain("⏭️步骤 X.Y 跳过，跳过原因：<原因>");
+    expect(workflowMdTemplate).toContain("🦆正在读规范<文件名>.md");
+    expect(workflowMdTemplate).toContain("🦆正在写规范<文件名>.md");
+    expect(workflowMdTemplate).toContain("项目使用 SVN 而不是 Git");
+    expect(workflowMdTemplate).toContain("步骤 3.4 跳过，直接走 3.5");
+    expect(workflowMdTemplate).toContain("svn commit");
+  });
+
   it("[issue-225] workflow.md in_progress breadcrumb has class-2 sub-agent dispatch protocol", () => {
     // The in_progress breadcrumb instructs the main agent to prefix
     // dispatch prompts with "Active task: <path>" on class-2 platforms.

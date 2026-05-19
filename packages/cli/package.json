@@ -1,13 +1,13 @@
 {
-  "name": "@mindfoldhq/trellis",
-  "version": "0.5.18",
+  "name": "@sad678/trellis",
+  "version": "0.5.18-cn.2",
   "description": "AI capabilities grow like ivy — Trellis provides the structure to guide them along a disciplined path",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "trellis": "./bin/trellis.js",
-    "tl": "./bin/trellis.js"
+    "trellis": "bin/trellis.js",
+    "tl": "bin/trellis.js"
   },
   "publishConfig": {
     "access": "public"
