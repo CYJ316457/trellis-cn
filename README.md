@@ -7,143 +7,178 @@
 </p>
 
 <p align="center">
-<strong>Make AI coding reliable at team scale.</strong><br/>
-<sub>A team AI coding harness for progressive specs, custom workflows, task context, and memory across Claude Code, Cursor, OpenCode, Codex, Kiro, Kilo, Gemini CLI, Antigravity, Windsurf, Qoder, CodeBuddy, GitHub Copilot, Droid, and Pi Agent.</sub>
+<strong>Trellis 中文工作流分支</strong><br/>
+<sub>基于 mindfold-ai/Trellis 的中文化 fork，默认初始化半中文 workflow，并保留原 Trellis 的命令、目录结构与机器契约。</sub>
 </p>
 
 <p align="center">
-<a href="./README_CN.md">简体中文</a> •
-<a href="https://docs.trytrellis.app/">Docs</a> •
-<a href="https://docs.trytrellis.app/start/install-and-first-task">Quick Start</a> •
-<a href="https://docs.trytrellis.app/advanced/multi-platform">Supported Platforms</a> •
-<a href="https://docs.trytrellis.app/start/real-world-scenarios">Use Cases</a>
-</p>
-
-<p align="center">
-<a href="https://www.npmjs.com/package/@mindfoldhq/trellis"><img src="https://img.shields.io/npm/v/@mindfoldhq/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
-<a href="https://www.npmjs.com/package/@mindfoldhq/trellis"><img src="https://img.shields.io/npm/dw/@mindfoldhq/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
+<a href="https://www.npmjs.com/package/@sad678/trellis"><img src="https://img.shields.io/npm/v/@sad678/trellis/cn.svg?style=flat-square&color=2563eb" alt="npm cn version" /></a>
+<a href="https://www.npmjs.com/package/@sad678/trellis"><img src="https://img.shields.io/npm/dw/@sad678/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
+<a href="https://github.com/CYJ316457/trellis-cn"><img src="https://img.shields.io/badge/fork-CYJ316457%2Ftrellis--cn-0f766e?style=flat-square" alt="fork repository" /></a>
 <a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/stargazers"><img src="https://img.shields.io/github/stars/mindfold-ai/Trellis?style=flat-square&color=eab308" alt="stars" /></a>
-<a href="https://docs.trytrellis.app/"><img src="https://img.shields.io/badge/docs-trytrellis.app-0f766e?style=flat-square" alt="docs" /></a>
-<a href="https://discord.com/invite/tWcCZ3aRHc"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/issues"><img src="https://img.shields.io/github/issues/mindfold-ai/Trellis?style=flat-square&color=e67e22" alt="open issues" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/pulls"><img src="https://img.shields.io/github/issues-pr/mindfold-ai/Trellis?style=flat-square&color=9b59b6" alt="open PRs" /></a>
-<a href="https://deepwiki.com/mindfold-ai/Trellis"><img src="https://img.shields.io/badge/Ask-DeepWiki-blue?style=flat-square" alt="Ask DeepWiki" /></a>
-<a href="https://chatgpt.com/?q=Explain+the+project+mindfold-ai/Trellis+on+GitHub"><img src="https://img.shields.io/badge/Ask-ChatGPT-74aa9c?style=flat-square&logo=openai&logoColor=white" alt="Ask ChatGPT" /></a>
 </p>
 
 <p align="center">
-<img src="assets/trellis-demo.gif" alt="Trellis workflow demo" width="100%">
+<img src="assets/trellis-demo-zh.gif" alt="Trellis 工作流演示" width="100%">
 </p>
 
-## Why Trellis?
+## 这个 fork 改了什么
 
-| Capability | What it changes |
-| --- | --- |
-| **Auto-injected specs** | Write conventions once in `.trellis/spec/`, then let Trellis inject the relevant context into each session instead of repeating yourself. |
-| **Task-centered workflow** | Keep PRDs, implementation context, review context, and task status in `.trellis/tasks/` so AI work stays structured. |
-| **Project memory** | Journals in `.trellis/workspace/` preserve what happened last time, so each new session starts with real context. |
-| **Team-shared standards** | Specs live in the repo, so one person's hard-won workflow or rule can benefit the whole team. |
-| **Multi-platform setup** | Bring the same Trellis structure to 14 AI coding platforms instead of rebuilding your workflow per tool. |
+这个仓库主要做中文化与工作流提示增强，核心代码仍沿用官方 Trellis：
 
-## Prerequisites:
+- npm 包名改为 `@sad678/trellis`。
+- 当前中文发布版本为 `0.5.18-cn.2`，`cn` dist-tag 指向该版本。
+- `trellis init` 初始化出的 `.trellis/workflow.md` 已中文化说明性文字、流程描述和用户可见提示。
+- 保留机器契约不变：`[workflow-state:no_task]` 等标签名、`[/workflow-state:...]` 结束标签、`task.py create`、`implement.jsonl`、`check.jsonl`、`planning`、`in_progress`、`completed` 等命令名、路径和值都不改。
+- 新增步骤打印规则：执行步骤前打印 `📌步骤 X.Y 开始执行`，完成后打印 `✅步骤 X.Y 执行完成`，跳过时打印 `⏭️步骤 X.Y 跳过，跳过原因：<原因>`。
+- 新增规范读写提示：读取规范前打印 `🦆正在读规范<文件名>.md`，写入规范前打印 `🦆正在写规范<文件名>.md`。
+- 新增 SVN 规则：如果项目使用 SVN 而不是 Git，步骤 3.4 跳过，直接走 3.5，归档时再让用户决定是否执行 `svn commit`。
+
+## 前置要求
 
 - **Node.js** >= 18
 - **Python** >= 3.9
 
-## Quick Start
+## 安装
+
+安装中文 fork：
 
 ```bash
-# 1. Install Trellis
-npm install -g @mindfoldhq/trellis@latest
+npm install -g @sad678/trellis@cn
+```
 
-# 2. Initialize in your repo
+也可以固定到当前版本：
+
+```bash
+npm install -g @sad678/trellis@0.5.18-cn.2
+```
+
+安装后命令仍然是官方同名命令：
+
+```bash
+trellis --help
+tl --help
+```
+
+注意：目前没有改成 `trellis-cn` 命令。`@sad678/trellis` 和官方 `@mindfoldhq/trellis` 都注册 `trellis` / `tl`，全局同时安装时谁最后安装，命令就指向谁。
+
+## 初始化和更新
+
+在你的项目根目录执行：
+
+```bash
+trellis init
+```
+
+如果要带开发者名：
+
+```bash
 trellis init -u your-name
+```
 
-# 3. Or initialize with the platforms you actually use
+如果项目已经初始化过 Trellis，要把这个中文 fork 的 workflow 同步进去：
+
+```bash
+trellis update
+```
+
+常见平台参数仍然沿用官方用法，例如：
+
+```bash
+trellis init --codex -u your-name
 trellis init --cursor --opencode --codex -u your-name
 ```
 
-See the [Quick Start](https://docs.trytrellis.app/start/install-and-first-task) and [Supported Platforms](https://docs.trytrellis.app/advanced/multi-platform) guides for setup details.
+## 和官方版同时使用
 
-## How to Use
+全局安装时不建议同时装官方版和这个 fork，因为命令名冲突：
 
-The workflow is simple:
+```bash
+trellis
+tl
+```
 
-1. **Describe what you want** in natural language.
-2. **Brainstorm** with the AI one question at a time until the PRD is clear, then implementation begins.
-3. **Let it run** — the AI calls Trellis Implement and auto-checks the result against specs, lint, type-check, and tests.
-4. **Type `/trellis:finish-work`** when the work is done or the session context fills up. Trellis archives the task and updates journals.
+推荐用 `npx` / `npm exec` 临时指定包：
 
-## How It Works
+```bash
+npx @sad678/trellis@cn init
+npx @mindfoldhq/trellis init
+```
 
-Trellis runs a 4-phase loop with auto-invoked skills and sub-agents:
+更明确的写法：
 
-1. **Plan** — `trellis-brainstorm` walks through requirements one question at a time and writes `prd.md`. Research-heavy items go to a `trellis-research` sub-agent. The result is curated specs + research files referenced from `implement.jsonl` / `check.jsonl`.
-2. **Implement** — a `trellis-implement` sub-agent writes code from the PRD with the curated context auto-injected, no git commit.
-3. **Verify** — a `trellis-check` sub-agent reviews the diff against specs and runs lint, type-check, and tests, self-fixing where it can.
-4. **Finish** — a final check runs, then `trellis-update-spec` promotes new learnings back into `.trellis/spec/` so the next session starts smarter.
+```bash
+npm exec --package @sad678/trellis@cn -- trellis init
+npm exec --package @mindfoldhq/trellis -- trellis init
+```
 
-## Resources
+如果要全局切到这个中文 fork：
 
-| Need                            | Link                                                                           |
-| ------------------------------- | ------------------------------------------------------------------------------ |
-| Install Trellis in a repo       | [Quick Start](https://docs.trytrellis.app/start/install-and-first-task)        |
-| Understand platform differences | [Supported Platforms](https://docs.trytrellis.app/advanced/multi-platform)     |
-| See the workflow in practice    | [Real-World Scenarios](https://docs.trytrellis.app/start/real-world-scenarios) |
-| Start from spec templates       | [Spec Templates](https://docs.trytrellis.app/templates/specs-index)            |
-| Track releases                  | [Changelog](https://docs.trytrellis.app/changelog)                             |
+```bash
+npm uninstall -g @mindfoldhq/trellis
+npm install -g @sad678/trellis@cn
+```
 
-## FAQ
+## 卸载
 
-<details>
-<summary><strong>How is Trellis different from <code>CLAUDE.md</code>, <code>AGENTS.md</code>, or <code>.cursorrules</code>?</strong></summary>
+从项目里移除 Trellis 生成的文件：
 
-Those files are useful entry points, but they tend to become monolithic. Trellis adds scoped specs, task PRDs, workflow gates, workspace memory, and platform-aware generated files around them.
+```bash
+trellis uninstall
+```
 
-</details>
+先预览将删除什么：
 
-<details>
-<summary><strong>Is Trellis only for Claude Code?</strong></summary>
+```bash
+trellis uninstall --dry-run
+```
 
-No. Trellis is a project layer that works across multiple coding agents and IDEs.
+全局卸载中文 fork：
 
-</details>
+```bash
+npm uninstall -g @sad678/trellis
+```
 
-<details>
-<summary><strong>Is Trellis for solo developers or teams?</strong></summary>
+## 如何使用
 
-Both. Solo developers use it for memory and repeatable workflow. Teams get the larger benefit: shared standards, task boundaries, reviewable context, and platform portability.
+Trellis 的日常工作流保持不变：
 
-</details>
+1. 用自然语言告诉 AI 你要做什么。
+2. AI 按 workflow 进入规划、需求澄清、调研、实现、检查和收尾。
+3. task 相关文件会写入 `.trellis/tasks/`。
+4. 项目规范保存在 `.trellis/spec/`，按任务注入给 AI。
+5. 工作完成后使用 `/trellis:finish-work` 或对应平台命令收尾归档。
 
-<details>
-<summary><strong>Do I have to write every spec file manually?</strong></summary>
+这个 fork 只是让 workflow 更适合中文协作，并要求 AI 在关键步骤打印更明确的执行状态。
 
-No. Many teams start by letting AI draft specs from existing code and then tighten the important parts by hand. Trellis works best when you keep the high-signal rules explicit and versioned.
+## 本次对话沉淀的重要提示
 
-</details>
+- npm 发布使用的是 `@sad678/trellis`，不是官方 `@mindfoldhq/trellis`。
+- `0.5.18-cn.0` 是第一版半中文 workflow，`0.5.18-cn.1` 优化了 workflow 注释，`0.5.18-cn.2` 新增步骤打印、规范读写提示和 SVN 跳过 3.4 规则。
+- 安装中文版本请用 `npm install -g @sad678/trellis@cn`，不要只看 `latest`；当前 `latest` 仍可能不是中文版本。
+- 初始化新项目仍然使用 `trellis init`；已有项目使用 `trellis update` 更新 workflow。
+- 如果同时需要官方版和中文版，优先用 `npm exec --package ... -- trellis ...` 指定包，避免全局命令冲突。
+- 发布 npm 时不要把 token 写入仓库；可以用临时 `.npmrc` 或 npm 登录态，发布后清理。
+- GitHub 推送使用 SSH remote：`git@github.com:CYJ316457/trellis-cn.git`。
+- 当前仓库里 `assets/trellis-demo-zh.gif` 大约 58 MB，GitHub 会提示超过推荐大小 50 MB，但推送仍可成功；后续可以考虑 Git LFS。
 
-<details>
-<summary><strong>Can teams use this without constant conflicts?</strong></summary>
+## 资源
 
-Yes. Personal workspace journals stay separate per developer, while shared specs and tasks stay in the repo where they can be reviewed and improved like any other project artifact.
+| 需求 | 链接 |
+| --- | --- |
+| 中文 fork 仓库 | [CYJ316457/trellis-cn](https://github.com/CYJ316457/trellis-cn) |
+| 中文 fork npm 包 | [@sad678/trellis](https://www.npmjs.com/package/@sad678/trellis) |
+| 官方仓库 | [mindfold-ai/Trellis](https://github.com/mindfold-ai/Trellis) |
+| 官方中文文档 | [docs.trytrellis.app/zh](https://docs.trytrellis.app/zh) |
+| 官方快速开始 | [安装和第一个任务](https://docs.trytrellis.app/zh/start/install-and-first-task) |
+| 官方支持平台 | [支持平台](https://docs.trytrellis.app/zh/advanced/multi-platform) |
 
-</details>
+## 许可证
 
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=mindfold-ai/Trellis&type=Date)](https://star-history.com/#mindfold-ai/Trellis&Date)
-
-## Community & Resources
-
-- [Official Docs](https://docs.trytrellis.app/)
-- [GitHub Issues](https://github.com/mindfold-ai/Trellis/issues)
-- [Discord](https://discord.com/invite/tWcCZ3aRHc)
-- [Tech Blog](https://docs.trytrellis.app/blog)
+本 fork 继承官方 Trellis 的 AGPL-3.0-only 许可证。
 
 <p align="center">
-<a href="https://github.com/mindfold-ai/Trellis">Official Repository</a> •
-<a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE">AGPL-3.0 License</a> •
-Built by <a href="https://github.com/mindfold-ai">Mindfold</a>
+<a href="https://github.com/CYJ316457/trellis-cn">中文 fork</a> ·
+<a href="https://github.com/mindfold-ai/Trellis">官方仓库</a> ·
+<a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE">AGPL-3.0 License</a>
 </p>
