@@ -18,6 +18,12 @@ import warnings
 from io import StringIO
 from pathlib import Path
 
+
+def hook_log(message: str) -> None:
+    if os.environ.get("TRELLIS_HOOK_DEBUG") == "1":
+        print(f"[trellis-hook] {message}", file=sys.stderr, flush=True)
+
+
 # Force UTF-8 on stdin/stdout/stderr on Windows. Default codepage there is
 # cp936 / cp1252 / etc. — non-ASCII content (Chinese task names, prd snippets)
 # both in stdin (hook payload from host CLI) and stdout (our emitted blocks)
@@ -354,7 +360,9 @@ def _build_workflow_toc(workflow_path: Path) -> str:
 
 
 def main() -> None:
+    hook_log("codex session-start start")
     if should_skip_injection():
+        hook_log("codex session-start disabled by env/non-interactive")
         sys.exit(0)
 
     # Read hook input from stdin
@@ -366,11 +374,15 @@ def main() -> None:
     except (json.JSONDecodeError, KeyError):
         hook_input = {}
         project_dir = Path(".").resolve()
+        hook_log("codex session-start stdin parse failed; using cwd fallback")
 
     configure_project_encoding(project_dir)
 
     trellis_dir = project_dir / ".trellis"
     context_key = _resolve_context_key(project_dir, hook_input)
+    hook_log(f"codex session-start project_dir={project_dir}")
+    hook_log(f"codex session-start trellis_dir={trellis_dir}")
+    hook_log(f"codex session-start context_key={context_key or '(none)'}")
 
     output = StringIO()
 
@@ -465,6 +477,8 @@ If a task is READY, execute its Next required action without asking whether to c
 </ready>""")
 
     context = output.getvalue()
+    hook_log(f"codex session-start task_status={task_status}")
+    hook_log(f"codex session-start emitted chars={len(context)}")
     result = {
         "suppressOutput": True,
         "systemMessage": f"Trellis context injected ({len(context)} chars)",

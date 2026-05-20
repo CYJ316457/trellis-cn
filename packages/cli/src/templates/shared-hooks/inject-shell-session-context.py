@@ -18,6 +18,11 @@ from pathlib import Path
 from typing import Any
 
 
+def hook_log(message: str) -> None:
+    if os.environ.get("TRELLIS_HOOK_DEBUG") == "1":
+        print(f"[trellis-hook] {message}", file=sys.stderr, flush=True)
+
+
 DIR_WORKFLOW = ".trellis"
 DIR_RUNTIME = ".runtime"
 DIR_CURSOR_SHELL = "cursor-shell"
@@ -142,39 +147,51 @@ def _write_ticket(
 
 
 def main() -> int:
+    hook_log("inject-shell-session-context start")
     if os.environ.get("TRELLIS_HOOKS") == "0" or os.environ.get("TRELLIS_DISABLE_HOOKS") == "1":
+        hook_log("inject-shell-session-context disabled by env")
         return 0
 
     try:
         hook_input = json.loads(sys.stdin.read())
     except (json.JSONDecodeError, ValueError):
         hook_input = {}
+        hook_log("inject-shell-session-context stdin parse failed; using {}")
     if not isinstance(hook_input, dict):
         hook_input = {}
 
     command = _string_value(hook_input.get("command")) or ""
     subcommands = _extract_task_subcommands(command)
+    hook_log(f"inject-shell-session-context command={command or '(empty)'}")
     if not subcommands:
+        hook_log("inject-shell-session-context no task.py subcommands detected")
         return 0
 
     cwd = Path(_string_value(hook_input.get("cwd")) or os.getcwd())
     root = _find_trellis_root(cwd)
     if root is None:
+        hook_log("inject-shell-session-context no trellis root found")
         return 0
 
     if not _has_context_identity(hook_input):
+        hook_log("inject-shell-session-context missing context identity")
         return 0
 
     resolve_context_key = _load_active_task_resolver(root)
     context_key = resolve_context_key(hook_input, platform="cursor")
     if not context_key:
+        hook_log("inject-shell-session-context could not resolve context key")
         return 0
 
     try:
         _write_ticket(root, hook_input, context_key, subcommands)
     except OSError:
+        hook_log("inject-shell-session-context failed to write runtime ticket")
         return 0
 
+    hook_log(
+        f"inject-shell-session-context wrote ticket for {len(subcommands)} subcommand(s) context_key={context_key}"
+    )
     print(json.dumps({"permission": "allow"}, ensure_ascii=False))
     return 0
 

@@ -51,6 +51,11 @@ from io import StringIO
 from pathlib import Path
 
 
+def hook_log(message: str) -> None:
+    if os.environ.get("TRELLIS_HOOK_DEBUG") == "1":
+        print(f"[trellis-hook] {message}", file=sys.stderr, flush=True)
+
+
 def _normalize_windows_shell_path(path_str: str) -> str:
     """Normalize Unix-style shell paths to real Windows paths.
 
@@ -337,7 +342,9 @@ def _build_workflow_toc(workflow_path: Path) -> str:
 
 
 def main() -> None:
+    hook_log("copilot session-start start")
     if should_skip_injection():
+        hook_log("copilot session-start disabled by env/non-interactive")
         sys.exit(0)
 
     # Read hook input from stdin
@@ -349,11 +356,15 @@ def main() -> None:
     except (json.JSONDecodeError, KeyError):
         hook_input = {}
         project_dir = Path(".").resolve()
+        hook_log("copilot session-start stdin parse failed; using cwd fallback")
 
     configure_project_encoding(project_dir)
 
     trellis_dir = project_dir / ".trellis"
     context_key = _resolve_context_key(project_dir, hook_input)
+    hook_log(f"copilot session-start project_dir={project_dir}")
+    hook_log(f"copilot session-start trellis_dir={trellis_dir}")
+    hook_log(f"copilot session-start context_key={context_key or '(none)'}")
 
     output = StringIO()
 
@@ -439,6 +450,8 @@ If a task is READY, execute its Next required action without asking whether to c
 </ready>""")
 
     context = output.getvalue()
+    hook_log(f"copilot session-start task_status={task_status}")
+    hook_log(f"copilot session-start emitted chars={len(context)}")
     result = {
         "suppressOutput": True,
         "hookSpecificOutput": {

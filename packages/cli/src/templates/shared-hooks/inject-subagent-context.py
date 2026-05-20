@@ -31,6 +31,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+
+def hook_log(message: str) -> None:
+    if os.environ.get("TRELLIS_HOOK_DEBUG") == "1":
+        print(f"[trellis-hook] {message}", file=sys.stderr, flush=True)
+
+
 # IMPORTANT: Force stdout to use UTF-8 on Windows
 # This fixes UnicodeEncodeError when outputting non-ASCII characters
 if sys.platform.startswith("win"):
@@ -663,28 +669,37 @@ def _parse_hook_input(input_data: dict) -> tuple[str, str, dict]:
 
 
 def main():
+    hook_log("inject-subagent-context start")
     if os.environ.get("TRELLIS_HOOKS") == "0" or os.environ.get("TRELLIS_DISABLE_HOOKS") == "1":
+        hook_log("inject-subagent-context disabled by env")
         sys.exit(0)
 
     try:
         input_data = json.load(sys.stdin)
     except json.JSONDecodeError:
+        hook_log("inject-subagent-context stdin parse failed")
         sys.exit(0)
 
     subagent_type, original_prompt, tool_input = _parse_hook_input(input_data)
     cwd = input_data.get("cwd", os.getcwd())
+    hook_log(f"inject-subagent-context cwd={cwd}")
+    hook_log(f"inject-subagent-context subagent_type={subagent_type}")
 
     # Only handle subagent types we care about
     if subagent_type not in AGENTS_ALL:
+        hook_log("inject-subagent-context unsupported subagent type")
         sys.exit(0)
 
     # Find repo root
     repo_root = find_repo_root(cwd)
     if not repo_root:
+        hook_log("inject-subagent-context no repo root found")
         sys.exit(0)
 
     # Get current task directory (research doesn't require it)
     task_dir = get_current_task(repo_root, input_data)
+    hook_log(f"inject-subagent-context repo_root={repo_root}")
+    hook_log(f"inject-subagent-context task_dir={task_dir}")
 
     # implement/check need task directory
     if subagent_type in AGENTS_REQUIRE_TASK:
@@ -721,6 +736,7 @@ def main():
         sys.exit(0)
 
     if not context:
+        hook_log("inject-subagent-context empty context; skipping injection")
         sys.exit(0)
 
     # Return updated input — use a multi-format output that covers all platforms.
@@ -741,6 +757,9 @@ def main():
         "updatedInput": updated,
     }
 
+    hook_log(
+        f"inject-subagent-context emitted prompt_chars={len(new_prompt)} context_chars={len(context)}"
+    )
     print(json.dumps(output, ensure_ascii=False))
     sys.exit(0)
 

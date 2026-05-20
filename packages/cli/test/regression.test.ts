@@ -1336,6 +1336,25 @@ describe("regression: current-task path normalization", () => {
     });
   }
 
+  function runPythonWithStdio(
+    relativeScriptPath: string,
+    input?: string,
+    envOverrides: NodeJS.ProcessEnv = {},
+  ): { stdout: string; stderr: string; status: number | null } {
+    const scriptPath = path.join(tmpDir, relativeScriptPath);
+    const result = spawnSync(pythonCmd, [scriptPath], {
+      cwd: tmpDir,
+      input,
+      encoding: "utf-8",
+      env: sessionEnv(envOverrides),
+    });
+    return {
+      stdout: result.stdout ?? "",
+      stderr: result.stderr ?? "",
+      status: result.status,
+    };
+  }
+
   function expectTemplateContent(
     content: string | undefined,
     label: string,
@@ -2948,6 +2967,26 @@ describe("regression: current-task path normalization", () => {
     expect(ctx.indexOf("</sub-agent-notice>")).toBeLessThan(
       ctx.indexOf("<workflow-state>"),
     );
+  });
+
+  it("[hook-debug] inject-workflow-state.py writes debug logs to stderr without breaking stdout JSON", () => {
+    setupTaskRepo();
+    writeProjectFile(
+      path.join(".codex", "hooks", "inject-workflow-state.py"),
+      expectTemplateContent(injectWorkflowStateScript, "inject-workflow-state"),
+    );
+
+    const result = runPythonWithStdio(
+      path.join(".codex", "hooks", "inject-workflow-state.py"),
+      JSON.stringify({ cwd: tmpDir, session_id: "workflow-a" }),
+      { TRELLIS_HOOK_DEBUG: "1" },
+    );
+
+    expect(result.status).toBe(0);
+    expect(() => JSON.parse(result.stdout)).not.toThrow();
+    expect(result.stderr).toContain("[trellis-hook]");
+    expect(result.stderr).toContain("inject-workflow-state start");
+    expect(result.stderr).toContain("platform=codex");
   });
 
   it("[workflow-state] silent exit 0 when not a Trellis project (no .trellis/ dir)", () => {
