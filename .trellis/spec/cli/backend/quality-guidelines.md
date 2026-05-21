@@ -961,6 +961,16 @@ If any answer is "no", the dep doesn't ship.
 
 ---
 
+## Commenting Critical Logic
+
+When you modify code logic at key business branches, state transitions, boundary conditions, cross-module calls, or tricky algorithms, add a short comment that explains intent or why the branch exists.
+
+- Keep the comment concise
+- Explain why, not what
+- Skip comments on self-evident lines
+
+---
+
 ## DO / DON'T
 
 ### DO

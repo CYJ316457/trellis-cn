@@ -41,9 +41,9 @@ import {
   resolveAllAsSkillsNeutral,
   resolveBundledSkills,
   resolveCodexTrellisStartSkill,
+  resolveSkillsNeutral,
   resolveCommands,
   resolveSkills,
-  resolveSkillsNeutral,
   wrapWithCommandFrontmatter,
   collectSkillTemplates,
   applyPullBasedPreludeMarkdown,
@@ -214,6 +214,15 @@ const PLATFORM_FUNCTIONS: Record<AITool, PlatformFunctions> = {
         resolveBundledSkills(ctx),
       )) {
         files.set(filePath, content);
+      }
+      const trellisForce = resolveSkillsNeutral(ctx).find(
+        (skill) => skill.name === "trellis-force",
+      );
+      if (trellisForce) {
+        files.set(
+          `.agents/skills/${trellisForce.name}/SKILL.md`,
+          trellisForce.content,
+        );
       }
       // Mirror configureCodex's extra trellis-start write so `trellis update`
       // picks up the file (was missing pre-0.5.7 — upgrade path silently

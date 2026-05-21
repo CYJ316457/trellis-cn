@@ -106,7 +106,7 @@ export async function createWorkflowStructure(
   // Copy config.yaml from templates
   await writeFile(
     path.join(cwd, DIR_NAMES.WORKFLOW, "config.yaml"),
-    configYamlTemplate,
+    replacePythonCommandLiterals(configYamlTemplate),
   );
 
   // Create workspace/ with index.md

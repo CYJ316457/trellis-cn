@@ -99,12 +99,55 @@ describe("init() integration", () => {
     ).toBe(true);
     expect(
       fs.existsSync(
+        path.join(tmpDir, ".claude", "skills", "trellis-force", "SKILL.md"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
         path.join(
           tmpDir,
           ".claude",
           "skills",
           "trellis-spec-bootstarp",
           "SKILL.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          ".claude",
+          "skills",
+          "trellis-weekly-report",
+          "SKILL.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(tmpDir, ".claude", "commands", "trellis", "weekly-report.md"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          ".claude",
+          "skills",
+          "trellis-monthly-report",
+          "SKILL.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          ".claude",
+          "commands",
+          "trellis",
+          "monthly-report.md",
         ),
       ),
     ).toBe(true);
@@ -216,6 +259,16 @@ describe("init() integration", () => {
         path.join(tmpDir, ".agents", "skills", "trellis-meta", "SKILL.md"),
       ),
     ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(tmpDir, ".agents", "skills", "trellis-force", "SKILL.md"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(tmpDir, ".agents", "skills", "force", "SKILL.md"),
+      ),
+    ).toBe(false);
     expect(
       fs.existsSync(
         path.join(
@@ -373,6 +426,33 @@ describe("init() integration", () => {
     expect(
       fs.existsSync(
         path.join(tmpDir, ".codebuddy", "commands", "trellis", "continue.md"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          ".codebuddy",
+          "skills",
+          "trellis-force",
+          "SKILL.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(tmpDir, ".codebuddy", "commands", "trellis", "force.md"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          ".codebuddy",
+          "commands",
+          "trellis",
+          "weekly-report.md",
+        ),
       ),
     ).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, ".claude"))).toBe(false);

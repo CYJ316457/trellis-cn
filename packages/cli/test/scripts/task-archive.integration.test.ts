@@ -25,12 +25,28 @@ const TEMPLATE_SCRIPTS = path.resolve(
 );
 
 function hasPython(): boolean {
-  try {
-    execFileSync("python3", ["--version"], { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
+  return resolvePython() !== null;
+}
+
+function resolvePython(): { command: string; args: string[] } | null {
+  const candidates = [
+    { command: "python3", args: [] as string[] },
+    { command: "python", args: [] as string[] },
+    { command: "py", args: ["-3"] },
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      execFileSync(candidate.command, [...candidate.args, "--version"], {
+        stdio: "ignore",
+      });
+      return candidate;
+    } catch {
+      // Try the next candidate.
+    }
   }
+
+  return null;
 }
 
 function git(cwd: string, ...args: string[]): string {
@@ -86,13 +102,39 @@ function makeTask(repo: string, name: string, prdBody: string): void {
 }
 
 function runArchive(repo: string, taskName: string): void {
+  const python = resolvePython();
+  if (!python) {
+    throw new Error("python is not available");
+  }
   const r = spawnSync(
-    "python3",
-    [".trellis/scripts/task.py", "archive", taskName],
+    python.command,
+    [...python.args, ".trellis/scripts/task.py", "archive", taskName],
     { cwd: repo, encoding: "utf-8" },
   );
   if (r.status !== 0) {
     throw new Error(`archive failed: ${r.stderr}`);
+  }
+}
+
+function runArchiveSummary(repo: string, taskJsonPath: string): void {
+  const python = resolvePython();
+  if (!python) {
+    throw new Error("python is not available");
+  }
+  const r = spawnSync(
+    python.command,
+    [...python.args, ".trellis/scripts/hooks/archive_summary.py"],
+    {
+      cwd: repo,
+      encoding: "utf-8",
+      env: {
+        ...process.env,
+        TASK_JSON_PATH: taskJsonPath,
+      },
+    },
+  );
+  if (r.status !== 0) {
+    throw new Error(`archive_summary failed: ${r.stderr}`);
   }
 }
 
@@ -198,5 +240,32 @@ describe.skipIf(!hasPython())(
       },
       30_000, // python startup + 100-file ops can be slow
     );
+
+    it("parses developer name from .developer before writing weekly report", () => {
+      fs.mkdirSync(path.join(tmp, ".trellis", "workspace"), {
+        recursive: true,
+      });
+      fs.writeFileSync(
+        path.join(tmp, ".trellis", ".developer"),
+        "name=cyj\ninitialized_at=2026-05-21T21:38:12.909972\n",
+      );
+      makeTask(tmp, "report", "# report task\n");
+
+      const taskJsonPath = path.join(
+        tmp,
+        ".trellis",
+        "tasks",
+        "report",
+        "task.json",
+      );
+      runArchiveSummary(tmp, taskJsonPath);
+
+      const weeklyDir = path.join(tmp, ".trellis", "workspace", "cyj");
+      const weeklyFiles = fs
+        .readdirSync(weeklyDir)
+        .filter((name) => name.startsWith("WeeklyReport"));
+      expect(weeklyFiles.length).toBe(1);
+      expect(fs.existsSync(path.join(weeklyDir, weeklyFiles[0]))).toBe(true);
+    });
   },
 );

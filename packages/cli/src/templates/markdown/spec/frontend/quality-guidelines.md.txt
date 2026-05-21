@@ -6,46 +6,39 @@
 
 ## Overview
 
-<!--
-Document your project's quality standards here.
-
-Questions to answer:
-- What patterns are forbidden?
-- What linting rules do you enforce?
-- What are your testing requirements?
-- What code review standards apply?
--->
-
-(To be filled by the team)
+These guidelines document the project's frontend coding rules. Keep the UI logic easy to scan and leave a short note only where state or interaction becomes non-obvious.
 
 ---
 
 ## Forbidden Patterns
 
-<!-- Patterns that should never be used and why -->
-
-(To be filled by the team)
+- Do not write commentary on obviously named code
+- Do not add long-winded explanatory comments that repeat the code
+- Do not leave temporary comment noise around finished logic
 
 ---
 
 ## Required Patterns
 
-<!-- Patterns that must always be used -->
+### Commenting Critical Logic
 
-(To be filled by the team)
+When you touch key interaction branches, state transitions, boundary conditions, data flow edges, or tricky algorithms, add a short comment that explains intent or why the branch exists.
+
+- Keep the comment concise
+- Explain why, not what
+- Skip comments on self-evident lines
 
 ---
 
 ## Testing Requirements
 
-<!-- What level of testing is expected -->
-
-(To be filled by the team)
+- Re-run the relevant frontend tests when comment-sensitive logic changes
+- If the edit changes behavior, add or update a regression test
 
 ---
 
 ## Code Review Checklist
 
-<!-- What reviewers should check -->
-
-(To be filled by the team)
+- Is the new comment only where readers actually need help?
+- Does the comment explain intent instead of restating code?
+- Did the logic change stay aligned with the surrounding frontend conventions?

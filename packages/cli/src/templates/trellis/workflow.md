@@ -198,6 +198,7 @@ inline dispatch mode 下，Phase 1.3 jsonl curation 会 **skipped** — main ses
 [workflow-state:in_progress]
 **Tools / 工具**：`trellis-implement` / `trellis-research` 只是 sub-agent types (Task/Agent tool, NOT Skill — there is no skill by these names)。`trellis-update-spec` 是 skill。`trellis-check` 两种形态都有；代码改动后的验证优先使用 Agent form。
 **Flow / 流程**：trellis-implement → trellis-check → trellis-update-spec → commit (Phase 3.4) → `/trellis:finish-work`。
+**Comment rule / 注释规则**：修改代码逻辑时，遇到关键业务分支、状态流转、边界条件、跨模块调用或复杂算法，必须补简洁注释，只解释为什么，不要给显而易见的代码写废话注释。
 **Step logging / 步骤打印**：执行 Phase 2 / 3 任一步骤时，开始前打印 `📌步骤 X.Y 开始执行`，完成后打印 `✅步骤 X.Y 执行完成`；如果跳过，打印 `⏭️步骤 X.Y 跳过，跳过原因：<原因>`。
 **Spec read/write logging / 规范读写提示**：读取或写入任意规范 `.md` 文件前，打印 `🦆正在读规范<文件名>.md` 或 `🦆正在写规范<文件名>.md`。
 **Main-session default (no override)**：默认 dispatch `trellis-implement` / `trellis-check` sub-agents — main agent 默认不直接改代码。Phase 3.4 commit (required, once)：在 trellis-update-spec 之后，或实现已可验证完成时，main agent **drives the commit** — 先用用户可见文本说明 commit plan，再运行 `git commit` — BEFORE suggesting `/trellis:finish-work`。`/finish-work` 会拒绝 dirty working tree (不含 `.trellis/workspace/` 和 `.trellis/tasks/` 的路径)。
@@ -218,6 +219,7 @@ inline dispatch mode 下，Phase 1.3 jsonl curation 会 **skipped** — main ses
 **Main-session default (inline dispatch_mode)**：main agent 直接改代码。Do NOT dispatch `trellis-implement` / `trellis-check` sub-agents。写代码前加载 `trellis-before-dev` skill；报告完成前加载 `trellis-check` skill。
 Phase 3.4 commit (required, once)：在 `trellis-update-spec` 之后，或实现已可验证完成时，main agent **drives the commit** — 先用用户可见文本说明 commit plan，再运行 `git commit` — BEFORE suggesting `/trellis:finish-work`。`/finish-work` 会拒绝 dirty working tree (不含 `.trellis/workspace/` 和 `.trellis/tasks/` 的路径)。
 如果项目使用 SVN 而不是 Git，打印 `⏭️步骤 3.4 跳过，跳过原因：项目使用 SVN 工作流`，直接进入 Phase 3.5；归档阶段再让用户决定是否执行 `svn commit`。
+**Comment rule**: 修改代码逻辑时，遇到关键业务分支、状态流转、边界条件、跨模块调用或复杂算法，必须补简洁注释，只解释为什么，不要给显而易见的代码写废话注释。
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish / 收尾
@@ -226,6 +228,8 @@ Phase 3.4 commit (required, once)：在 `trellis-update-spec` 之后，或实现
 - 3.3 Spec update `[required · once]` / 更新 spec
 - 3.4 Commit changes `[required · once]` / 提交变更
 - 3.5 Wrap-up reminder / 收尾提醒
+- 3.6 Weekly report archive summary / 周报归档总结
+- 3.7 Monthly report summary / 月报总结
 
 <!-- status='completed' 时显示的 per-turn breadcrumb。
      在正常流程里它目前是 DEAD：cmd_archive 会在同一次调用里把 status 写成
@@ -639,6 +643,16 @@ AI 负责把本 task 的 code changes 做成 batched commit，这样后续 `/fin
 完成以上步骤后，提醒用户可以运行 `/finish-work` 收尾 (archive the task, record the session)。
 如果项目使用 SVN 而不是 Git，归档时再让用户决定是否执行 `svn commit`，不要在 3.4 自动代做提交。
 
+#### 3.6 Weekly report archive summary / 周报归档总结
+
+归档时，`after_archive` 会生成归档目录内的 `summary.md`，并把同样内容追加到 `.trellis/workspace/<developer>/WeeklyReportMM-DD.md`。同一天多次归档必须追加，不覆盖。`本次改动` 必须详细到逐文件行数，至少包含归档 task artifacts，并包含仍然存在的 `task.json.relatedFiles` 文件。
+
+需要做 7 天周报汇总时，直接用 `{{CMD_REF:weekly-report}}`。它默认读取当前开发者 `.trellis/workspace/<developer>/WeeklyReportMM-DD.md`，合并最近 7 天的工作项，输出 `.trellis/workspace/<developer>/WeeklyReportMM-DD~MM-DD.md`，并在最后一节总结所有修改文件。
+
+#### 3.7 Monthly report summary / 月报总结
+
+需要做当月 1 号到今天的月报汇总时，直接用 `{{CMD_REF:monthly-report}}`。它默认读取当前开发者 `.trellis/workspace/<developer>/WeeklyReportMM-DD.md`，合并当月 1 号到今天的工作项，输出 `.trellis/workspace/<developer>/MonthlyReportYYYY-MM-01~YYYY-MM-DD.md`，并在最后一节总结所有修改文件。
+
 ---
 
 ## 自定义 Trellis (Customizing Trellis for forks)
@@ -699,4 +713,3 @@ your per-turn prompt text
 
 - `.trellis/spec/cli/backend/workflow-state-contract.md` — runtime contract + writer table + test invariants
 - `.trellis/scripts/inject-workflow-state.py` — actual parser (reads workflow.md only, no embedded text)
-

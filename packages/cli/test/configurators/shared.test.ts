@@ -5,6 +5,7 @@ import {
   resolveAllAsSkillsNeutral,
   resolvePlaceholders,
   resolvePlaceholdersNeutral,
+  resolveSkills,
   resolveSkillsNeutral,
 } from "../../src/configurators/shared.js";
 import { AI_TOOLS } from "../../src/types/ai-tools.js";
@@ -39,6 +40,15 @@ const cursorCtx: TemplateContext = {
   agentCapable: false,
   hasHooks: false,
   cliFlag: "cursor",
+};
+
+const codebuddyCtx: TemplateContext = {
+  cmdRefPrefix: "/trellis:",
+  executorAI: "Bash scripts or Task calls",
+  userActionLabel: "Slash commands",
+  agentCapable: true,
+  hasHooks: true,
+  cliFlag: "codebuddy",
 };
 
 // ---------------------------------------------------------------------------
@@ -517,10 +527,13 @@ describe("resolveSkillsNeutral / resolveAllAsSkillsNeutral", () => {
   it("resolveSkillsNeutral produces byte-identical output for Codex and Gemini", () => {
     const codexSkills = resolveSkillsNeutral(AI_TOOLS.codex.templateContext);
     const geminiSkills = resolveSkillsNeutral(AI_TOOLS.gemini.templateContext);
-    expect(codexSkills.length).toBe(geminiSkills.length);
-    for (let i = 0; i < codexSkills.length; i++) {
-      expect(codexSkills[i].name).toBe(geminiSkills[i].name);
-      expect(codexSkills[i].content).toBe(geminiSkills[i].content);
+    const codexShared = codexSkills.filter((skill) =>
+      geminiSkills.some((other) => other.name === skill.name),
+    );
+    expect(codexShared.length).toBe(geminiSkills.length);
+    for (const skill of geminiSkills) {
+      const match = codexShared.find((other) => other.name === skill.name);
+      expect(match?.content).toBe(skill.content);
     }
   });
 
@@ -558,12 +571,38 @@ describe("resolveSkillsNeutral / resolveAllAsSkillsNeutral", () => {
   it("resolveAllAsSkillsNeutral keeps the 5 shared skills byte-identical to resolveSkillsNeutral", () => {
     const all = resolveAllAsSkillsNeutral(AI_TOOLS.codex.templateContext);
     const fiveOnly = resolveSkillsNeutral(AI_TOOLS.codex.templateContext);
-    const sharedNames = new Set(fiveOnly.map((s) => s.name));
+    const sharedSkills = fiveOnly.filter((s) =>
+      all.some((item) => item.name === s.name),
+    );
+    const sharedNames = new Set(
+      sharedSkills.map((s) => s.name),
+    );
     const allShared = all.filter((s) => sharedNames.has(s.name));
-    expect(allShared.length).toBe(fiveOnly.length);
-    for (const five of fiveOnly) {
-      const match = allShared.find((s) => s.name === five.name);
-      expect(match?.content).toBe(five.content);
+    expect(allShared.length).toBe(sharedSkills.length);
+    for (const skill of sharedSkills) {
+      const match = allShared.find((s) => s.name === skill.name);
+      expect(match?.content).toBe(skill.content);
     }
+  });
+
+  it("emits trellis-force only for Codex, Claude, and CodeBuddy", () => {
+    expect(resolveSkills(codexCtx).some((skill) => skill.name === "trellis-force")).toBe(true);
+    expect(resolveSkills(claudeCtx).some((skill) => skill.name === "trellis-force")).toBe(true);
+    expect(
+      resolveSkills(codebuddyCtx).some((skill) => skill.name === "trellis-force"),
+    ).toBe(true);
+    expect(resolveSkills(cursorCtx).some((skill) => skill.name === "trellis-force")).toBe(false);
+    expect(
+      resolveSkills(AI_TOOLS.gemini.templateContext).some(
+        (skill) => skill.name === "trellis-force",
+      ),
+    ).toBe(false);
+  });
+
+  it("does not duplicate trellis-force in Codex command-as-skill output", () => {
+    const codexSkills = resolveAllAsSkillsNeutral(codexCtx).filter(
+      (skill) => skill.name === "trellis-force",
+    );
+    expect(codexSkills).toHaveLength(0);
   });
 });

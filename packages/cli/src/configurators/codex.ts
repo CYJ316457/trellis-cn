@@ -13,6 +13,7 @@ import {
   resolveAllAsSkillsNeutral,
   resolveBundledSkills,
   resolveCodexTrellisStartSkill,
+  resolveSkillsNeutral,
   applyPullBasedPreludeToml,
   writeSkills,
   writeSharedHooks,
@@ -56,6 +57,18 @@ export async function configureCodex(cwd: string): Promise<void> {
     await writeFile(
       path.join(trellisStartDir, "SKILL.md"),
       trellisStart.content,
+    );
+  }
+
+  const trellisForce = resolveSkillsNeutral(
+    AI_TOOLS.codex.templateContext,
+  ).find((skill) => skill.name === "trellis-force");
+  if (trellisForce) {
+    const trellisForceDir = path.join(sharedSkillsRoot, trellisForce.name);
+    ensureDir(trellisForceDir);
+    await writeFile(
+      path.join(trellisForceDir, "SKILL.md"),
+      trellisForce.content,
     );
   }
 

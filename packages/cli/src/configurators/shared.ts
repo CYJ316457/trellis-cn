@@ -196,7 +196,7 @@ export function resolvePlaceholdersNeutral(
   result = result.replace(RE_USER_ACTION_LABEL, context.userActionLabel);
   result = result.replace(RE_CLI_FLAG, context.cliFlag);
 
-  // Conditional blocks (resolved per platform — none of the 5 shared skills
+  // Conditional blocks (resolved per platform — none of the shared skills
   // use conditionals, but Codex-only command-as-skill files might in future).
   const flagValues: Record<(typeof CONDITIONAL_FLAGS)[number], boolean> = {
     AGENT_CAPABLE: context.agentCapable,
@@ -239,6 +239,12 @@ const SKILL_DESCRIPTIONS: Record<string, string> = {
     "Deep bug analysis to break the fix-forget-repeat cycle. Analyzes root cause category, why fixes failed, prevention mechanisms, and captures knowledge into specs. Use after fixing a bug to prevent the same class of bugs.",
   "update-spec":
     "Captures executable contracts and coding conventions into .trellis/spec/ documents. Use when learning something valuable from debugging, implementing, or discussion that should be preserved for future sessions.",
+  force:
+    "Force Trellis workflow order for Codex, Claude Code, and CodeBuddy. Use when you need later changes to follow the full Trellis process in sequence, without skipping steps.",
+  "weekly-report":
+    "汇总最近 7 天的工作记录，把 .trellis/workspace/<developer>/WeeklyReportMM-DD.md 合并成 WeeklyReportMM-DD~MM-DD.md，并在末尾整理所有修改文件。用于用户要周报、周总结、7 天工作回顾或修改文件汇总时。",
+  "monthly-report":
+    "汇总当前月份 1 号到今天的工作记录，把 .trellis/workspace/<developer>/WeeklyReportMM-DD.md 合并成 MonthlyReportYYYY-MM-01~YYYY-MM-DD.md，并在末尾整理所有修改文件。用于用户要月报、月总结、当月工作回顾或修改文件汇总时。",
 };
 
 /**
@@ -269,6 +275,28 @@ const COMMAND_DESCRIPTIONS: Record<string, string> = {
   continue: "Resume work on the current task at the correct phase.",
   "finish-work":
     "Wrap up the current session: quality gate, commit reminder, archive, journal.",
+  force: "Force Trellis workflow order.",
+  "weekly-report": "汇总最近 7 天的周报。",
+  "monthly-report": "汇总当月 1 号到今天的月报。",
+};
+
+/**
+ * Commands that already have a dedicated skill twin.
+ *
+ * Skill-only platforms (Codex/Kiro) convert command templates into skills.
+ * If a command also has its own skill template, keep only the skill version
+ * there to avoid duplicate SKILL.md files.
+ */
+const COMMAND_SKILL_TWINS = new Set([
+  "force",
+  "weekly-report",
+  "monthly-report",
+]);
+
+const SKILL_PLATFORM_ALLOWLIST: Partial<
+  Record<string, ReadonlySet<TemplateContext["cliFlag"]>>
+> = {
+  force: new Set(["claude", "codex", "codebuddy"]),
 };
 
 /** Wrap resolved command content with YAML frontmatter (name + description). */
@@ -330,6 +358,16 @@ function filterCommands(
   return templates;
 }
 
+function filterSkills(
+  templates: CommonTemplate[],
+  ctx: TemplateContext,
+): CommonTemplate[] {
+  return templates.filter((template) => {
+    const allowlist = SKILL_PLATFORM_ALLOWLIST[template.name];
+    return !allowlist || allowlist.has(ctx.cliFlag);
+  });
+}
+
 /**
  * Resolve ALL templates as skills with trellis- prefix.
  * Used by skill-only platforms (Kiro, Qoder, Codex) where everything is a skill.
@@ -340,8 +378,8 @@ function filterCommands(
 export function resolveAllAsSkills(ctx: TemplateContext): ResolvedTemplate[] {
   const templates = [
     ...filterCommands(getCommandTemplates(), ctx),
-    ...getSkillTemplates(),
-  ];
+    ...filterSkills(getSkillTemplates(), ctx),
+  ].filter((tmpl) => !COMMAND_SKILL_TWINS.has(tmpl.name));
   return templates.map((tmpl) => ({
     name: `trellis-${tmpl.name}`,
     content: wrapWithSkillFrontmatter(
@@ -365,11 +403,11 @@ export function resolveCommands(ctx: TemplateContext): ResolvedTemplate[] {
 }
 
 /**
- * Resolve only the 5 skill templates with trellis- prefix + SKILL.md frontmatter.
+ * Resolve the auto-triggered skill templates with trellis- prefix + SKILL.md frontmatter.
  * Used by "both" platforms for the auto-triggered skills.
  */
 export function resolveSkills(ctx: TemplateContext): ResolvedTemplate[] {
-  return getSkillTemplates().map((tmpl) => ({
+  return filterSkills(getSkillTemplates(), ctx).map((tmpl) => ({
     name: `trellis-${tmpl.name}`,
     content: wrapWithSkillFrontmatter(
       `trellis-${tmpl.name}`,
@@ -386,7 +424,7 @@ export function resolveSkills(ctx: TemplateContext): ResolvedTemplate[] {
  * {@link resolveSkills}.
  */
 export function resolveSkillsNeutral(ctx: TemplateContext): ResolvedTemplate[] {
-  return getSkillTemplates().map((tmpl) => ({
+  return filterSkills(getSkillTemplates(), ctx).map((tmpl) => ({
     name: `trellis-${tmpl.name}`,
     content: wrapWithSkillFrontmatter(
       `trellis-${tmpl.name}`,
@@ -397,18 +435,18 @@ export function resolveSkillsNeutral(ctx: TemplateContext): ResolvedTemplate[] {
 
 /**
  * Same as {@link resolveAllAsSkills} but uses
- * {@link resolvePlaceholdersNeutral} for the 5 shared skills. The 2 command
- * templates (continue, finish-work) folded into the skill set still resolve
- * `{{CLI_FLAG}}` / `{{PYTHON_CMD}}` per platform — only Codex writes those
- * files into `.agents/skills/`, so byte-identity isn't required there.
+ * {@link resolvePlaceholdersNeutral} for the shared skills. Command templates
+ * folded into the skill set still resolve `{{CLI_FLAG}}` / `{{PYTHON_CMD}}`
+ * per platform — only Codex writes those files into `.agents/skills/`, so
+ * byte-identity isn't required there.
  */
 export function resolveAllAsSkillsNeutral(
   ctx: TemplateContext,
 ): ResolvedTemplate[] {
   const templates = [
     ...filterCommands(getCommandTemplates(), ctx),
-    ...getSkillTemplates(),
-  ];
+    ...filterSkills(getSkillTemplates(), ctx),
+  ].filter((tmpl) => !COMMAND_SKILL_TWINS.has(tmpl.name));
   return templates.map((tmpl) => ({
     name: `trellis-${tmpl.name}`,
     content: wrapWithSkillFrontmatter(

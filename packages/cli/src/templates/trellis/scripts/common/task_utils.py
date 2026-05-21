@@ -247,13 +247,15 @@ def run_task_hooks(event: str, task_json_path: Path, repo_root: Path) -> None:
                 encoding="utf-8",
                 errors="replace",
             )
+            if result.stdout.strip():
+                print(result.stdout.rstrip(), file=sys.stderr)
+            if result.stderr.strip():
+                print(result.stderr.rstrip(), file=sys.stderr)
             if result.returncode != 0:
                 print(
                     colored(f"[WARN] Hook failed ({event}): {cmd}", Colors.YELLOW),
                     file=sys.stderr,
                 )
-                if result.stderr.strip():
-                    print(f"  {result.stderr.strip()}", file=sys.stderr)
         except Exception as e:
             print(
                 colored(f"[WARN] Hook error ({event}): {cmd} — {e}", Colors.YELLOW),

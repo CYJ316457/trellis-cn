@@ -31,6 +31,7 @@ import {
   resolveAllAsSkillsNeutral,
   resolveBundledSkills,
   resolveCommands,
+  resolveSkillsNeutral,
   resolveSkills,
   wrapWithCommandFrontmatter,
   replacePythonCommandLiterals,
@@ -263,7 +264,12 @@ describe("configurePlatform", () => {
     // Plus a Codex-specific `trellis-start` skill referenced by the
     // <trellis-bootstrap> notice in inject-workflow-state.py (the SessionStart
     // hook was removed for de-recursion).
-    const expected = resolveAllAsSkillsNeutral(AI_TOOLS.codex.templateContext);
+    const expected = [
+      ...resolveAllAsSkillsNeutral(AI_TOOLS.codex.templateContext),
+      ...resolveSkillsNeutral(AI_TOOLS.codex.templateContext).filter(
+        (skill) => skill.name === "trellis-force",
+      ),
+    ];
     const skillsRoot = path.join(tmpDir, ".agents", "skills");
     const actualNames = fs
       .readdirSync(skillsRoot, { withFileTypes: true })
@@ -946,6 +952,48 @@ describe("configurePlatform", () => {
     expect(
       templates?.get(".factory/commands/trellis/continue.md"),
     ).toBeDefined();
+    expect(
+      templates?.get(".factory/commands/trellis/force.md"),
+    ).toBeDefined();
+    expect(
+      templates?.get(".factory/commands/trellis/weekly-report.md"),
+    ).toBeDefined();
+    expect(
+      templates?.get(".factory/commands/trellis/monthly-report.md"),
+    ).toBeDefined();
+  });
+
+  it("collectPlatformTemplates('claude-code') maps trellis-force command + skill", () => {
+    const templates = collectPlatformTemplates("claude-code");
+    expect(templates).toBeInstanceOf(Map);
+    expect(
+      templates?.get(".claude/commands/trellis/force.md"),
+    ).toBeDefined();
+    expect(
+      templates?.get(".claude/skills/trellis-force/SKILL.md"),
+    ).toBeDefined();
+    expect(templates?.get(".claude/skills/force/SKILL.md")).toBeUndefined();
+  });
+
+  it("collectPlatformTemplates('codex') maps trellis-force only under .agents/skills", () => {
+    const templates = collectPlatformTemplates("codex");
+    expect(templates).toBeInstanceOf(Map);
+    expect(
+      templates?.get(".agents/skills/trellis-force/SKILL.md"),
+    ).toBeDefined();
+    expect(templates?.get(".agents/skills/force/SKILL.md")).toBeUndefined();
+  });
+
+  it("collectPlatformTemplates('codebuddy') maps trellis-force command + skill", () => {
+    const templates = collectPlatformTemplates("codebuddy");
+    expect(templates).toBeInstanceOf(Map);
+    expect(
+      templates?.get(".codebuddy/commands/trellis/force.md"),
+    ).toBeDefined();
+    expect(
+      templates?.get(".codebuddy/skills/trellis-force/SKILL.md"),
+    ).toBeDefined();
+    expect(templates?.get(".codebuddy/skills/force/SKILL.md")).toBeUndefined();
   });
 
   it("does not throw for any platform", async () => {

@@ -54,5 +54,7 @@ From Step 1 you know the current task. Check the task directory:
 | Done coding / quality check | `trellis-check` |
 | Stuck / fixed same bug multiple times | `trellis-break-loop` |
 | Learned something worth capturing | `trellis-update-spec` |
+| Need a 7-day work summary | `trellis-weekly-report` |
+| Need a month-to-date summary | `trellis-monthly-report` |
 
 Full rules + anti-rationalization table in `.trellis/workflow.md`.

@@ -398,16 +398,16 @@ def cmd_archive(args: argparse.Namespace) -> int:
         year_month = archive_dest.parent.name
         print(colored(f"Archived: {dir_name} -> archive/{year_month}/", Colors.GREEN), file=sys.stderr)
 
+        # Run hooks before auto-commit so hook outputs such as summary.md are included.
+        archived_json = archive_dest / FILE_TASK_JSON
+        run_task_hooks("after_archive", archived_json, repo_root)
+
         # Auto-commit unless --no-commit
         if not getattr(args, "no_commit", False):
             _auto_commit_archive(dir_name, repo_root)
 
         # Return the archive path
         print(f"{DIR_WORKFLOW}/{DIR_TASKS}/{DIR_ARCHIVE}/{year_month}/{dir_name}")
-
-        # Run hooks with the archived path
-        archived_json = archive_dest / FILE_TASK_JSON
-        run_task_hooks("after_archive", archived_json, repo_root)
         return 0
 
     return 1
