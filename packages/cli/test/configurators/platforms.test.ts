@@ -961,6 +961,12 @@ describe("configurePlatform", () => {
     expect(
       templates?.get(".factory/commands/trellis/monthly-report.md"),
     ).toBeDefined();
+    expect(
+      templates?.get(".factory/commands/trellis/project-weekly-report.md"),
+    ).toBeDefined();
+    expect(
+      templates?.get(".factory/commands/trellis/project-monthly-report.md"),
+    ).toBeDefined();
   });
 
   it("collectPlatformTemplates('claude-code') maps trellis-force command + skill", () => {
@@ -994,6 +1000,23 @@ describe("configurePlatform", () => {
       templates?.get(".codebuddy/skills/trellis-force/SKILL.md"),
     ).toBeDefined();
     expect(templates?.get(".codebuddy/skills/force/SKILL.md")).toBeUndefined();
+  });
+
+  it("collectPlatformTemplates('claude-code') maps project report command + skill", () => {
+    const templates = collectPlatformTemplates("claude-code");
+    expect(templates).toBeInstanceOf(Map);
+    expect(
+      templates?.get(".claude/commands/trellis/project-weekly-report.md"),
+    ).toBeDefined();
+    expect(
+      templates?.get(".claude/skills/trellis-project-weekly-report/SKILL.md"),
+    ).toBeDefined();
+    expect(
+      templates?.get(".claude/commands/trellis/project-monthly-report.md"),
+    ).toBeDefined();
+    expect(
+      templates?.get(".claude/skills/trellis-project-monthly-report/SKILL.md"),
+    ).toBeDefined();
   });
 
   it("does not throw for any platform", async () => {

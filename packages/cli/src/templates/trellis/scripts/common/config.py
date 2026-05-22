@@ -167,6 +167,7 @@ def _next_content_line(lines: list[str], start: int) -> tuple[int, str]:
 DEFAULT_SESSION_COMMIT_MESSAGE = "chore: record journal"
 DEFAULT_MAX_JOURNAL_LINES = 2000
 DEFAULT_SESSION_AUTO_COMMIT = True
+DEFAULT_FINISH_WORK_CHECKLIST_VALIDATION = False
 
 CONFIG_FILE = "config.yaml"
 
@@ -194,6 +195,26 @@ def _load_config(repo_root: Path | None = None) -> dict:
         return parse_simple_yaml(content)
     except (OSError, IOError):
         return {}
+
+
+def _parse_bool_setting(
+    raw: object,
+    default: bool,
+    setting_name: str,
+) -> bool:
+    """Parse a Trellis boolean config value with the usual alias set."""
+    if isinstance(raw, bool):
+        return raw
+    s = str(raw).strip().lower()
+    if s in ("true", "yes", "1", "on"):
+        return True
+    if s in ("false", "no", "0", "off"):
+        return False
+    print(
+        f"[WARN] invalid {setting_name} value: {raw!r}; using {str(default).lower()} (default)",
+        file=sys.stderr,
+    )
+    return default
 
 
 def get_session_commit_message(repo_root: Path | None = None) -> str:
@@ -229,18 +250,26 @@ def get_session_auto_commit(repo_root: Path | None = None) -> bool:
     """
     config = _load_config(repo_root)
     raw = config.get("session_auto_commit", DEFAULT_SESSION_AUTO_COMMIT)
-    if isinstance(raw, bool):
-        return raw
-    s = str(raw).strip().lower()
-    if s in ("true", "yes", "1", "on"):
-        return True
-    if s in ("false", "no", "0", "off"):
-        return False
-    print(
-        f"[WARN] invalid session_auto_commit value: {raw!r}; using true (default)",
-        file=sys.stderr,
+    return _parse_bool_setting(raw, DEFAULT_SESSION_AUTO_COMMIT, "session_auto_commit")
+
+
+def get_finish_work_checklist_validation(repo_root: Path | None = None) -> bool:
+    """Whether ``task.py archive`` should enforce the finish-work checklist.
+
+    Default: ``False`` (no extra gate). Set
+    ``finish_work_checklist_validation: true`` in ``.trellis/config.yaml`` to
+    make archive run a pre-archive readiness check.
+    """
+    config = _load_config(repo_root)
+    raw = config.get(
+        "finish_work_checklist_validation",
+        DEFAULT_FINISH_WORK_CHECKLIST_VALIDATION,
     )
-    return DEFAULT_SESSION_AUTO_COMMIT
+    return _parse_bool_setting(
+        raw,
+        DEFAULT_FINISH_WORK_CHECKLIST_VALIDATION,
+        "finish_work_checklist_validation",
+    )
 
 
 def get_hooks(event: str, repo_root: Path | None = None) -> list[str]:

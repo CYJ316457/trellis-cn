@@ -56,5 +56,7 @@ From Step 1 you know the current task. Check the task directory:
 | Learned something worth capturing | `trellis-update-spec` |
 | Need a 7-day work summary | `trellis-weekly-report` |
 | Need a month-to-date summary | `trellis-monthly-report` |
+| Need a project-wide 7-day summary | `trellis-project-weekly-report` |
+| Need a project month-to-date summary | `trellis-project-monthly-report` |
 
 Full rules + anti-rationalization table in `.trellis/workflow.md`.

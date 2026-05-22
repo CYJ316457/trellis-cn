@@ -23,6 +23,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .config import (
+    get_finish_work_checklist_validation,
     get_packages,
     get_session_auto_commit,
     is_monorepo,
@@ -105,6 +106,69 @@ def _repo_relative_path(path: Path, repo_root: Path) -> str:
         return path.relative_to(repo_root).as_posix()
     except ValueError:
         return str(path)
+
+
+def _has_curated_jsonl_entry(jsonl_path: Path) -> bool:
+    """Return True when a JSONL file has at least one real curated entry."""
+    try:
+        for line in jsonl_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(row, dict) and row.get("file"):
+                return True
+    except OSError:
+        return False
+    return False
+
+
+def _finish_work_checklist_issues(task_dir: Path, repo_root: Path) -> list[str]:
+    """Collect finish-work readiness issues before archive."""
+    issues: list[str] = []
+
+    task_json_path = task_dir / FILE_TASK_JSON
+    task_data: dict | None = None
+    if not task_json_path.is_file():
+        issues.append("missing task.json")
+    else:
+        task_data = read_json(task_json_path)
+        if not task_data:
+            issues.append("failed to read task.json")
+        else:
+            status = task_data.get("status")
+            if not isinstance(status, str) or not status:
+                issues.append("task.json.status is missing")
+            elif status == "planning":
+                issues.append("task.json.status is still planning")
+
+    if not (task_dir / "prd.md").is_file():
+        issues.append("missing prd.md")
+
+    subagent_platform_present = _has_subagent_platform(repo_root)
+    implement_jsonl = task_dir / "implement.jsonl"
+    check_jsonl = task_dir / "check.jsonl"
+    jsonl_required = (
+        subagent_platform_present
+        or implement_jsonl.exists()
+        or check_jsonl.exists()
+    )
+
+    if jsonl_required:
+        if not implement_jsonl.is_file():
+            issues.append("missing implement.jsonl")
+        elif not _has_curated_jsonl_entry(implement_jsonl):
+            issues.append("implement.jsonl only contains the seed _example row")
+
+        if not check_jsonl.is_file():
+            issues.append("missing check.jsonl")
+        elif not _has_curated_jsonl_entry(check_jsonl):
+            issues.append("check.jsonl only contains the seed _example row")
+
+    return issues
 
 
 # =============================================================================
@@ -365,6 +429,32 @@ def cmd_archive(args: argparse.Namespace) -> int:
 
     dir_name = task_dir.name
     task_json_path = task_dir / FILE_TASK_JSON
+
+    if get_finish_work_checklist_validation(repo_root):
+        issues = _finish_work_checklist_issues(task_dir, repo_root)
+        if issues:
+            print(
+                colored(
+                    f"[WARN] finish_work_checklist_validation failed for {dir_name}:",
+                    Colors.YELLOW,
+                ),
+                file=sys.stderr,
+            )
+            for issue in issues:
+                print(colored(f"  - {issue}", Colors.YELLOW), file=sys.stderr)
+            print(
+                colored(
+                    "Archive aborted. Fix the checklist items or set "
+                    "finish_work_checklist_validation: false.",
+                    Colors.YELLOW,
+                ),
+                file=sys.stderr,
+            )
+            return 1
+        print(
+            colored("[OK] finish_work_checklist_validation passed.", Colors.GREEN),
+            file=sys.stderr,
+        )
 
     # Update status before archiving
     today = datetime.now().strftime("%Y-%m-%d")

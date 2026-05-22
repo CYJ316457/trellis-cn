@@ -78,10 +78,16 @@ function setupRepo(tmp: string): void {
   );
 }
 
-function makeTask(repo: string, name: string, prdBody: string): void {
+function makeTask(
+  repo: string,
+  name: string,
+  prdBody: string | null = "# PRD\n",
+): void {
   const dir = path.join(repo, ".trellis", "tasks", name);
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, "prd.md"), prdBody);
+  if (prdBody !== null) {
+    fs.writeFileSync(path.join(dir, "prd.md"), prdBody);
+  }
   fs.writeFileSync(
     path.join(dir, "task.json"),
     JSON.stringify({
@@ -116,6 +122,18 @@ function runArchive(repo: string, taskName: string): void {
   }
 }
 
+function runArchiveResult(repo: string, taskName: string) {
+  const python = resolvePython();
+  if (!python) {
+    throw new Error("python is not available");
+  }
+  return spawnSync(
+    python.command,
+    [...python.args, ".trellis/scripts/task.py", "archive", taskName],
+    { cwd: repo, encoding: "utf-8" },
+  );
+}
+
 function runArchiveSummary(repo: string, taskJsonPath: string): void {
   const python = resolvePython();
   if (!python) {
@@ -136,6 +154,10 @@ function runArchiveSummary(repo: string, taskJsonPath: string): void {
   if (r.status !== 0) {
     throw new Error(`archive_summary failed: ${r.stderr}`);
   }
+}
+
+function writeConfig(repo: string, content: string): void {
+  fs.writeFileSync(path.join(repo, ".trellis", "config.yaml"), content);
 }
 
 describe.skipIf(!hasPython())(
@@ -266,6 +288,73 @@ describe.skipIf(!hasPython())(
         .filter((name) => name.startsWith("WeeklyReport"));
       expect(weeklyFiles.length).toBe(1);
       expect(fs.existsSync(path.join(weeklyDir, weeklyFiles[0]))).toBe(true);
+    });
+
+    it("keeps checklist validation off by default", () => {
+      makeTask(tmp, "no-prd", null);
+
+      runArchive(tmp, "no-prd");
+
+      const archiveRoot = path.join(tmp, ".trellis", "tasks", "archive");
+      const archived = fs.readdirSync(archiveRoot).some((monthDir) => {
+        const monthPath = path.join(archiveRoot, monthDir, "no-prd");
+        return fs.existsSync(monthPath);
+      });
+      expect(archived).toBe(true);
+    });
+
+    it("blocks archive when checklist validation is enabled and PRD is missing", () => {
+      makeTask(tmp, "needs-prd", null);
+      writeConfig(
+        tmp,
+        [
+          "session_auto_commit: false",
+          "finish_work_checklist_validation: true",
+        ].join("\n") + "\n",
+      );
+
+      const result = runArchiveResult(tmp, "needs-prd");
+
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain("finish_work_checklist_validation failed");
+      expect(result.stderr).toContain("missing prd.md");
+      const archiveRoot = path.join(tmp, ".trellis", "tasks", "archive");
+      expect(fs.existsSync(archiveRoot)).toBe(false);
+      const archived = fs.readdirSync(path.join(tmp, ".trellis", "tasks")).some((entry) =>
+        entry === "archive" &&
+        fs.readdirSync(archiveRoot).some((monthDir) =>
+          fs.existsSync(path.join(archiveRoot, monthDir, "needs-prd")),
+        ),
+      );
+      expect(archived).toBe(false);
+    });
+
+    it("passes checklist validation when required artifacts exist", () => {
+      fs.mkdirSync(path.join(tmp, ".claude"), { recursive: true });
+      makeTask(tmp, "ready", "# PRD\n");
+      fs.writeFileSync(
+        path.join(tmp, ".trellis", "tasks", "ready", "implement.jsonl"),
+        JSON.stringify({ file: ".trellis/spec/guides/index.md", reason: "guide" }) + "\n",
+      );
+      fs.writeFileSync(
+        path.join(tmp, ".trellis", "tasks", "ready", "check.jsonl"),
+        JSON.stringify({ file: ".trellis/spec/guides/index.md", reason: "guide" }) + "\n",
+      );
+      writeConfig(
+        tmp,
+        [
+          "session_auto_commit: false",
+          "finish_work_checklist_validation: true",
+        ].join("\n") + "\n",
+      );
+
+      runArchive(tmp, "ready");
+
+      const archiveRoot = path.join(tmp, ".trellis", "tasks", "archive");
+      const archived = fs.readdirSync(archiveRoot).some((monthDir) =>
+        fs.existsSync(path.join(archiveRoot, monthDir, "ready")),
+      );
+      expect(archived).toBe(true);
     });
   },
 );

@@ -33,6 +33,21 @@ max_journal_lines: 2000
 # session_auto_commit: true
 
 #-------------------------------------------------------------------------------
+# Finish Work Checklist Validation
+#-------------------------------------------------------------------------------
+
+# When true, task.py archive runs a pre-archive readiness gate before moving
+# the task into archive/. Default false keeps the current behavior unchanged.
+#
+# The gate checks:
+# - task.json exists and is no longer planning
+# - prd.md exists
+# - implement.jsonl / check.jsonl are curated when the project uses
+#   sub-agent-capable platform templates
+#
+# finish_work_checklist_validation: false
+
+#-------------------------------------------------------------------------------
 # Task Lifecycle Hooks
 #-------------------------------------------------------------------------------
 

@@ -580,6 +580,7 @@ Update the docs under `.trellis/spec/` accordingly. Even if the conclusion is "n
 #### 3.4 Commit changes `[required · once]`
 
 The AI drives a batched commit of this task's code changes so `/finish-work` can run cleanly afterwards. Goal: produce work commits FIRST, then bookkeeping (archive + journal) commits land after — never interleaved.
+When a workflow step node runs, print the required messages exactly as written in the workflow definition: `📌步骤 X.Y 开始执行`, `✅步骤 X.Y 执行完成`, `⏭️步骤 X.Y 跳过，跳过原因：<原因>`, `🦆正在读规范<文件名>.md`, `🦆正在写规范<文件名>.md`.
 
 **Step-by-step**:
 

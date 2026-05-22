@@ -240,11 +240,15 @@ const SKILL_DESCRIPTIONS: Record<string, string> = {
   "update-spec":
     "Captures executable contracts and coding conventions into .trellis/spec/ documents. Use when learning something valuable from debugging, implementing, or discussion that should be preserved for future sessions.",
   force:
-    "Force Trellis workflow order for Codex, Claude Code, and CodeBuddy. Use when you need later changes to follow the full Trellis process in sequence, without skipping steps.",
+    "强制 Codex、Claude Code 和 CodeBuddy 在后续修改中遵循完整的 Trellis 工作流顺序，不跳步骤、不乱顺序。用于用户明确要求按 Trellis 全流程推进的场景。",
   "weekly-report":
     "汇总最近 7 天的工作记录，把 .trellis/workspace/<developer>/WeeklyReportMM-DD.md 合并成 WeeklyReportMM-DD~MM-DD.md，并在末尾整理所有修改文件。用于用户要周报、周总结、7 天工作回顾或修改文件汇总时。",
   "monthly-report":
     "汇总当前月份 1 号到今天的工作记录，把 .trellis/workspace/<developer>/WeeklyReportMM-DD.md 合并成 MonthlyReportYYYY-MM-01~YYYY-MM-DD.md，并在末尾整理所有修改文件。用于用户要月报、月总结、当月工作回顾或修改文件汇总时。",
+  "project-weekly-report":
+    "汇总项目中所有开发者最近 7 天的周报，把 .trellis/workspace/<developer>/WeeklyReportMM-DD.md 合并成 ProjectWeeklyReportMM-DD~MM-DD.md，并在末尾整理所有修改文件。用于用户要项目周报、项目周总结或全员 7 天工作回顾时。",
+  "project-monthly-report":
+    "汇总项目中所有开发者当月 1 号到今天的周报，把 .trellis/workspace/<developer>/WeeklyReportMM-DD.md 合并成 ProjectMonthlyReportYYYY-MM-01~YYYY-MM-DD.md，并在末尾整理所有修改文件。用于用户要项目月报、项目月总结或全员当月工作回顾时。",
 };
 
 /**
@@ -275,9 +279,11 @@ const COMMAND_DESCRIPTIONS: Record<string, string> = {
   continue: "Resume work on the current task at the correct phase.",
   "finish-work":
     "Wrap up the current session: quality gate, commit reminder, archive, journal.",
-  force: "Force Trellis workflow order.",
+  force: "强制按 Trellis 工作流顺序执行。",
   "weekly-report": "汇总最近 7 天的周报。",
   "monthly-report": "汇总当月 1 号到今天的月报。",
+  "project-weekly-report": "汇总项目中所有开发者最近 7 天的周报。",
+  "project-monthly-report": "汇总项目中所有开发者当月 1 号到今天的周报。",
 };
 
 /**
@@ -291,6 +297,8 @@ const COMMAND_SKILL_TWINS = new Set([
   "force",
   "weekly-report",
   "monthly-report",
+  "project-weekly-report",
+  "project-monthly-report",
 ]);
 
 const SKILL_PLATFORM_ALLOWLIST: Partial<

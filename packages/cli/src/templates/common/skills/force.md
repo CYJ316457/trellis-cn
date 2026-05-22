@@ -1,24 +1,25 @@
-# Trellis Force
+# Trellis 强制流程
 
-Enforce the full Trellis workflow order for the rest of this session.
+在本次会话的剩余阶段，强制按完整的 Trellis 工作流顺序执行。
 
-Use this only in Trellis-managed repositories when the user wants later edits to stay on the workflow rails instead of skipping steps because the change "looks small".
+只在 Trellis 管理的仓库里使用它，适用于用户明确要求后续修改必须沿着工作流推进，而不是因为改动“看起来很小”就跳过步骤的场景。
 
-## Required order
+## 必须遵守的顺序
 
-1. If Trellis context is not loaded yet, load `trellis-start` first.
-2. If the request is implementation work and the task or requirements are not ready yet, load `trellis-brainstorm` and create or continue the task before coding.
-3. Before writing code, follow the current platform's implementation entry:
-   - inline platforms: load `trellis-before-dev`
-   - sub-agent platforms: dispatch the implementation step Trellis expects for the current phase
-4. After implementation, run `trellis-check`.
-5. If the work produced a reusable rule, pitfall, or convention, run `trellis-update-spec`.
-6. Do not run `trellis-finish-work` until the commit step required by `.trellis/workflow.md` is complete.
+1. 如果还没有加载 Trellis 上下文，先加载 `trellis-start`。
+2. 如果当前请求属于实现类工作，而任务或需求还没有准备好，先加载 `trellis-brainstorm`，在开始编码前创建或继续对应任务。
+3. 写代码前，按当前平台对应的实现入口执行：
+   - inline 平台：加载 `trellis-before-dev`
+   - sub-agent 平台：分派当前阶段要求的实现步骤
+4. 实现完成后，执行 `trellis-check`。
+5. 如果本次工作沉淀出了可复用的规则、坑点或约定，执行 `trellis-update-spec`。
+6. 在 `.trellis/workflow.md` 要求的提交步骤完成前，不要执行 `trellis-finish-work`。
 
-## Enforcement rules
+## 约束规则
 
-- Do not skip required phases or reorder them because the change looks minor.
-- Do not bypass the active Trellis phase unless the user explicitly gives a workflow override that the current workflow text allows.
-- If the current phase does not permit code changes yet, stop and finish the missing workflow step first.
+- 不要因为改动看起来很小，就跳过必需阶段或打乱顺序。
+- 不要绕过当前激活的 Trellis 阶段，除非用户明确给出当前 workflow 文本允许的覆盖指令。
+- 执行工作流步骤节点时，必须原样打印工作流要求的信息：`📌步骤 X.Y 开始执行`、`✅步骤 X.Y 执行完成`、`⏭️步骤 X.Y 跳过，跳过原因：<原因>`、`🦆正在读规范<文件名>.md`、`🦆正在写规范<文件名>.md`。
+- 如果当前阶段还不允许改代码，就先停下来，把缺失的工作流步骤补完。
 
-Applies to Codex, Claude Code, and CodeBuddy in Trellis-managed repositories.
+适用于 Trellis 管理仓库中的 Codex、Claude Code 和 CodeBuddy。

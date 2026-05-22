@@ -599,9 +599,38 @@ describe("resolveSkillsNeutral / resolveAllAsSkillsNeutral", () => {
     ).toBe(false);
   });
 
+  it("emits project report skills for Codex, Claude, and CodeBuddy", () => {
+    for (const ctx of [codexCtx, claudeCtx, codebuddyCtx]) {
+      expect(
+        resolveSkills(ctx).some(
+          (skill) => skill.name === "trellis-project-weekly-report",
+        ),
+      ).toBe(true);
+      expect(
+        resolveSkills(ctx).some(
+          (skill) => skill.name === "trellis-project-monthly-report",
+        ),
+      ).toBe(true);
+    }
+    expect(
+      resolveSkills(cursorCtx).some(
+        (skill) => skill.name === "trellis-project-weekly-report",
+      ),
+    ).toBe(true);
+  });
+
   it("does not duplicate trellis-force in Codex command-as-skill output", () => {
     const codexSkills = resolveAllAsSkillsNeutral(codexCtx).filter(
       (skill) => skill.name === "trellis-force",
+    );
+    expect(codexSkills).toHaveLength(0);
+  });
+
+  it("does not duplicate project report commands in Codex command-as-skill output", () => {
+    const codexSkills = resolveAllAsSkillsNeutral(codexCtx).filter(
+      (skill) =>
+        skill.name === "trellis-project-weekly-report" ||
+        skill.name === "trellis-project-monthly-report",
     );
     expect(codexSkills).toHaveLength(0);
   });

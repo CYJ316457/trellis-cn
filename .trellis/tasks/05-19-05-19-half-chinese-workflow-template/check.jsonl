@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/cli/backend/directory-structure.md", "reason": "Check template source and generated workflow paths remain consistent."}
+{"file": ".trellis/spec/cli/unit-test/conventions.md", "reason": "Check verification scope matches template text/init behavior change."}

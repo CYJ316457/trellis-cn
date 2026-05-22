@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/cli/backend/directory-structure.md", "reason": "Explains workflow template source locations and dogfooding boundaries."}
+{"file": ".trellis/spec/cli/backend/quality-guidelines.md", "reason": "General CLI quality constraints for changed files."}
+{"file": ".trellis/spec/cli/unit-test/conventions.md", "reason": "Determines whether and how template/init behavior changes should be tested."}

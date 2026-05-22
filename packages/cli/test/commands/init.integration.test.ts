@@ -155,6 +155,50 @@ describe("init() integration", () => {
       fs.existsSync(
         path.join(
           tmpDir,
+          ".claude",
+          "skills",
+          "trellis-project-weekly-report",
+          "SKILL.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          ".claude",
+          "commands",
+          "trellis",
+          "project-weekly-report.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          ".claude",
+          "skills",
+          "trellis-project-monthly-report",
+          "SKILL.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          ".claude",
+          "commands",
+          "trellis",
+          "project-monthly-report.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
           ".cursor",
           "skills",
           "trellis-meta",

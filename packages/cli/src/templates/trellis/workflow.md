@@ -253,6 +253,7 @@ Phase 3.4 commit (required, once)：在 `trellis-update-spec` 之后，或实现
 5. **详细信息要打印出来** — 执行任一步骤时，开始前打印 `📌步骤 X.Y 开始执行`，完成后打印 `✅步骤 X.Y 执行完成`；如果跳过步骤，打印 `⏭️步骤 X.Y 跳过，跳过原因：<原因>`。
 6. **读写规范要提示** — 读取规范文件前打印 `🦆正在读规范<文件名>.md`；写入规范文件前打印 `🦆正在写规范<文件名>.md`。
 7. **SVN 项目跳过提交步骤** — 如果项目使用 SVN 而不是 Git，步骤 3.4 跳过，直接走 3.5；归档的时候再让用户决定是否执行 `svn commit`。
+8. **步骤节点输出要对齐工作流** — 执行任何步骤节点时，必须原样打印：`📌步骤 X.Y 开始执行`、`✅步骤 X.Y 执行完成`、`⏭️步骤 X.Y 跳过，跳过原因：<原因>`、`🦆正在读规范<文件名>.md`、`🦆正在写规范<文件名>.md`。
 
 ### Skill 路由 (Skill Routing)
 
@@ -640,7 +641,7 @@ AI 负责把本 task 的 code changes 做成 batched commit，这样后续 `/fin
 
 #### 3.5 Wrap-up reminder / 收尾提醒
 
-完成以上步骤后，提醒用户可以运行 `/finish-work` 收尾 (archive the task, record the session)。
+完成以上步骤后，提醒用户可以运行 `/finish-work` 收尾 (archive the task, record the session)。如果 `.trellis/config.yaml` 打开 `finish_work_checklist_validation: true`，归档前还会多跑一次总检查；缺项先修完再收尾。
 如果项目使用 SVN 而不是 Git，归档时再让用户决定是否执行 `svn commit`，不要在 3.4 自动代做提交。
 
 #### 3.6 Weekly report archive summary / 周报归档总结

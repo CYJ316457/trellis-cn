@@ -36,6 +36,7 @@
 - 新增 `force` skill / command：可以要求后续修改强制按 Trellis 全流程顺序执行，不跳步、不乱序。
 - 新增归档总结：归档后生成 task 内 `summary.md`，并追加到 `.trellis/workspace/<developer>/WeeklyReportMM-DD.md`。
 - 新增周报/月报 skill 与 command：`weekly-report` 汇总最近 7 天，`monthly-report` 汇总当月 1 号到当前时间，最后统一输出修改文件总览。
+- 新增项目周报/月报 skill 与 command：`project-weekly-report` 汇总项目中所有开发者最近 7 天，`project-monthly-report` 汇总项目中所有开发者当月 1 号到当前时间。
 
 ## 前置要求
 
@@ -159,12 +160,14 @@ Trellis 的日常工作流保持不变：
 - `force`：后续修改必须按 Trellis 流程顺序执行，适合你想强制 agent 不跳流程时使用。
 - `weekly-report`：读取 `.trellis/workspace/<developer>/WeeklyReportMM-DD.md`，默认汇总最近 7 天，输出 `WeeklyReportMM-DD~MM-DD.md`。
 - `monthly-report`：读取 `.trellis/workspace/<developer>/WeeklyReportMM-DD.md`，默认汇总当月 1 号到当前时间，输出 `MonthlyReportYYYY-MM-01~YYYY-MM-DD.md`。
+- `project-weekly-report`：读取 `.trellis/workspace/*/WeeklyReportMM-DD.md`，默认汇总项目中所有开发者最近 7 天，输出 `ProjectWeeklyReportMM-DD~MM-DD.md`。
+- `project-monthly-report`：读取 `.trellis/workspace/*/WeeklyReportMM-DD.md`，默认汇总项目中所有开发者当月 1 号到当前时间，输出 `ProjectMonthlyReportYYYY-MM-01~YYYY-MM-DD.md`。
 - 周报和月报最后一节都会汇总所有修改文件，便于复盘和交付。
 
 ## 本次对话沉淀的重要提示
 
 - npm 发布使用的是 `@sad678/trellis`，不是官方 `@mindfoldhq/trellis`。
-- `0.5.18-cn.0` 是第一版半中文 workflow，`0.5.18-cn.1` 优化了 workflow 注释，`0.5.18-cn.2` 新增步骤打印、规范读写提示和 SVN 跳过 3.4 规则，`0.5.18-cn.4` 新增 force、归档总结、周报和月报能力。
+- `0.5.18-cn.0` 是第一版半中文 workflow，`0.5.18-cn.1` 优化了 workflow 注释，`0.5.18-cn.2` 新增步骤打印、规范读写提示和 SVN 跳过 3.4 规则，`0.5.18-cn.4` 新增 force、归档总结、周报和月报能力，`0.5.18-cn.5` 新增项目周报/月报能力。
 - 安装中文版本请用 `npm install -g @sad678/trellis@cn`，不要只看 `latest`；当前 `latest` 仍可能不是中文版本。
 - 初始化新项目仍然使用 `trellis init`；已有项目使用 `trellis update` 更新 workflow。
 - 如果同时需要官方版和中文版，优先用 `npm exec --package ... -- trellis ...` 指定包，避免全局命令冲突。
