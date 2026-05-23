@@ -11,6 +11,7 @@ const ALL_HOOK_FILES = [
   "inject-shell-session-context.py",
   "inject-workflow-state.py",
   "inject-subagent-context.py",
+  "stop-check.py",
 ] as const;
 
 describe("shared-hooks capability table", () => {
@@ -93,6 +94,23 @@ describe("shared-hooks capability table", () => {
     expect([...SHARED_HOOKS_BY_PLATFORM.kiro]).toEqual([
       "inject-subagent-context.py",
     ]);
+  });
+
+
+  it("stop-check.py is distributed only to Stop-capable guard platforms", () => {
+    expect(SHARED_HOOKS_BY_PLATFORM.claude).toContain("stop-check.py");
+    expect(SHARED_HOOKS_BY_PLATFORM.codex).toContain("stop-check.py");
+    expect(SHARED_HOOKS_BY_PLATFORM.codebuddy).toContain("stop-check.py");
+
+    for (const [platform, hooks] of Object.entries(
+      SHARED_HOOKS_BY_PLATFORM,
+    )) {
+      if (["claude", "codex", "codebuddy"].includes(platform)) continue;
+      expect(
+        hooks.includes("stop-check.py"),
+        `${platform} should not install stop-check.py until its Stop event is verified to block safely`,
+      ).toBe(false);
+    }
   });
 
   it("getSharedHookScriptsForPlatform returns exactly the declared set per platform", () => {

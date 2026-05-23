@@ -1206,6 +1206,13 @@ conversation:
 | `opencode/plugins/session-start.js` | ✅ | Plugin prepends Trellis context into the first user message and persists it |
 | `copilot/hooks/session-start.py` | ❌ | Microsoft documents `SessionStart.hookSpecificOutput.additionalContext` (preview, VS Code 1.110+), but consumption depends on the user's VS Code/Copilot version. Trellis emits the spec-compliant payload; do not add a first-reply notice until consumption is verified end-to-end. |
 
+`Stop` guards are wired only for hosts that can safely block session termination:
+
+| Implementation | Include Stop guard? | Reason |
+|---|---:|---|
+| `shared-hooks/stop-check.py` | ✅ | Claude / Codex / CodeBuddy can return top-level `decision: "block"` + `reason` on Stop |
+| other platforms | ❌ | Trellis does not yet verify Stop semantics there |
+
 Keep hook payload shapes unchanged. Add this as text inside the existing
 context string, not as a new JSON key.
 

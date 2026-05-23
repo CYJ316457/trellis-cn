@@ -90,6 +90,10 @@ Both regexes MUST use the `\1` backreference variant — `[workflow-state:([A-Za
    The platform host injects `additionalContext` as system-level preamble
    for that turn.
 
+   A separate Stop guard may return top-level `decision: "block"` + `reason`
+   when the active task is still unfinished; Claude / Codex / CodeBuddy use
+   this to keep an interrupted session alive until the remaining steps finish.
+
    `hookEventName` MUST echo the host's per-turn event name or the host's
    schema validator will reject the payload. The shared hook detects the
    platform via `_detect_platform()` and emits the matching value:

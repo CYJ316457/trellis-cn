@@ -243,7 +243,7 @@ const PLATFORM_FUNCTIONS: Record<AITool, PlatformFunctions> = {
       for (const hook of getCodexHooks()) {
         files.set(`.codex/hooks/${hook.name}`, hook.content);
       }
-      // Shared hooks (inject-workflow-state.py only) — mirror configureCodex
+      // Shared hooks (inject-workflow-state.py + stop-check.py) — mirror configureCodex
       for (const [k, v] of collectSharedHooks(".codex/hooks", "codex")) {
         files.set(k, v);
       }

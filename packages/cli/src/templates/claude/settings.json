@@ -67,6 +67,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{PYTHON_CMD}} .claude/hooks/stop-check.py",
+            "timeout": 15
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {}

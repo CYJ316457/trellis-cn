@@ -25,6 +25,7 @@ const TEMPLATES_ROOT = join(
  * Per-platform hook config descriptor.
  *
  * - `sessionStartEvent`: null when the platform has no SessionStart hook
+ * - `stopEvent`: null when the platform has no blocking Stop guard
  *   (codex). Used to look up entries in `parsed.hooks[event]`.
  * - `userPromptEvent`: event key for the inject-workflow-state hook (varies:
  *   `UserPromptSubmit`, `BeforeAgent`, `userPromptSubmitted`,
@@ -44,6 +45,8 @@ const PLATFORM_HOOK_CONFIGS = [
     sessionStartTimeoutField: "timeout",
     userPromptEvent: "UserPromptSubmit",
     userPromptTimeoutField: "timeout",
+    stopEvent: "Stop",
+    stopTimeoutField: "timeout",
     unit: "s",
   },
   {
@@ -54,6 +57,8 @@ const PLATFORM_HOOK_CONFIGS = [
     sessionStartTimeoutField: "timeout",
     userPromptEvent: "UserPromptSubmit",
     userPromptTimeoutField: "timeout",
+    stopEvent: "Stop",
+    stopTimeoutField: "timeout",
     unit: "s",
   },
   {
@@ -64,6 +69,8 @@ const PLATFORM_HOOK_CONFIGS = [
     sessionStartTimeoutField: "timeout",
     userPromptEvent: "UserPromptSubmit",
     userPromptTimeoutField: "timeout",
+    stopEvent: null,
+    stopTimeoutField: "timeout",
     unit: "s",
   },
   {
@@ -74,6 +81,8 @@ const PLATFORM_HOOK_CONFIGS = [
     sessionStartTimeoutField: "timeout",
     userPromptEvent: "UserPromptSubmit",
     userPromptTimeoutField: "timeout",
+    stopEvent: null,
+    stopTimeoutField: "timeout",
     unit: "s",
   },
   {
@@ -84,6 +93,8 @@ const PLATFORM_HOOK_CONFIGS = [
     sessionStartTimeoutField: "timeout",
     userPromptEvent: "BeforeAgent",
     userPromptTimeoutField: "timeout",
+    stopEvent: null,
+    stopTimeoutField: "timeout",
     unit: "ms",
   },
   {
@@ -96,6 +107,8 @@ const PLATFORM_HOOK_CONFIGS = [
     sessionStartTimeoutField: "timeout",
     userPromptEvent: "userPromptSubmitted",
     userPromptTimeoutField: "timeoutSec",
+    stopEvent: null,
+    stopTimeoutField: "timeout",
     unit: "s",
   },
   {
@@ -109,6 +122,8 @@ const PLATFORM_HOOK_CONFIGS = [
     sessionStartTimeoutField: "timeout",
     userPromptEvent: null,
     userPromptTimeoutField: "timeout",
+    stopEvent: null,
+    stopTimeoutField: "timeout",
     unit: "s",
   },
   {
@@ -120,6 +135,8 @@ const PLATFORM_HOOK_CONFIGS = [
     sessionStartTimeoutField: "timeout",
     userPromptEvent: "UserPromptSubmit",
     userPromptTimeoutField: "timeout",
+    stopEvent: "Stop",
+    stopTimeoutField: "timeout",
     unit: "s",
   },
 ] as const;
@@ -191,6 +208,21 @@ describe("hook-timeouts: default timeouts survive Windows Python cold start (iss
           expect(hooks.length).toBeGreaterThan(0);
           for (const hook of hooks) {
             const value = hook[cfg.userPromptTimeoutField];
+            expect(typeof value).toBe("number");
+            expect(value as number).toBeGreaterThanOrEqual(min);
+          }
+        });
+      }
+
+      if (cfg.stopEvent !== null) {
+        it(`${cfg.stopEvent} (stop-check) timeout >= ${MIN_USER_PROMPT_S}${cfg.unit}`, () => {
+          const min =
+            cfg.unit === "ms" ? MIN_USER_PROMPT_S * 1000 : MIN_USER_PROMPT_S;
+          const events = parsed.hooks?.[cfg.stopEvent];
+          const hooks = extractHookEntries(events, cfg.schema);
+          expect(hooks.length).toBeGreaterThan(0);
+          for (const hook of hooks) {
+            const value = hook[cfg.stopTimeoutField];
             expect(typeof value).toBe("number");
             expect(value as number).toBeGreaterThanOrEqual(min);
           }

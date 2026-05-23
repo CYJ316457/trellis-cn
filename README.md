@@ -27,7 +27,7 @@
 这个仓库主要做中文化与工作流提示增强，核心代码仍沿用官方 Trellis：
 
 - npm 包名改为 `@sad678/trellis`。
-- 当前中文发布版本为 `0.5.18-cn.4`，`cn` dist-tag 指向该版本。
+- 当前中文发布版本为 `0.5.18-cn.5-beta.1`，`cn` dist-tag 指向该版本。
 - `trellis init` 初始化出的 `.trellis/workflow.md` 已中文化说明性文字、流程描述和用户可见提示。
 - 保留机器契约不变：`[workflow-state:no_task]` 等标签名、`[/workflow-state:...]` 结束标签、`task.py create`、`implement.jsonl`、`check.jsonl`、`planning`、`in_progress`、`completed` 等命令名、路径和值都不改。
 - 新增步骤打印规则：执行步骤前打印 `📌步骤 X.Y 开始执行`，完成后打印 `✅步骤 X.Y 执行完成`，跳过时打印 `⏭️步骤 X.Y 跳过，跳过原因：<原因>`。
@@ -54,7 +54,7 @@ npm install -g @sad678/trellis@cn
 也可以固定到当前版本：
 
 ```bash
-npm install -g @sad678/trellis@0.5.18-cn.4
+npm install -g @sad678/trellis@0.5.18-cn.5-beta.1
 ```
 
 安装后命令仍然是官方同名命令：
@@ -167,7 +167,7 @@ Trellis 的日常工作流保持不变：
 ## 本次对话沉淀的重要提示
 
 - npm 发布使用的是 `@sad678/trellis`，不是官方 `@mindfoldhq/trellis`。
-- `0.5.18-cn.0` 是第一版半中文 workflow，`0.5.18-cn.1` 优化了 workflow 注释，`0.5.18-cn.2` 新增步骤打印、规范读写提示和 SVN 跳过 3.4 规则，`0.5.18-cn.4` 新增 force、归档总结、周报和月报能力，`0.5.18-cn.5` 新增项目周报/月报能力。
+- `0.5.18-cn.0` 是第一版半中文 workflow，`0.5.18-cn.1` 优化了 workflow 注释，`0.5.18-cn.2` 新增步骤打印、规范读写提示和 SVN 跳过 3.4 规则，`0.5.18-cn.4` 新增 force、归档总结、周报和月报能力，`0.5.18-cn.5-beta.1` 新增 stop guard、项目周报/月报能力。
 - 安装中文版本请用 `npm install -g @sad678/trellis@cn`，不要只看 `latest`；当前 `latest` 仍可能不是中文版本。
 - 初始化新项目仍然使用 `trellis init`；已有项目使用 `trellis update` 更新 workflow。
 - 如果同时需要官方版和中文版，优先用 `npm exec --package ... -- trellis ...` 指定包，避免全局命令冲突。
