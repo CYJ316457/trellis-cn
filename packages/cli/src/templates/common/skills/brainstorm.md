@@ -115,6 +115,37 @@ Create/seed `prd.md` immediately with what you know:
 * <research notes summary if applicable>
 ```
 
+### Optional external brainstorm mode (opt-in only)
+
+If `.trellis/config.yaml` enables:
+
+```yaml
+brainstorm:
+  enabled: true
+  mode: external
+```
+
+then you may run:
+
+```bash
+python3 ./.trellis/scripts/brainstorm_runner.py status
+```
+
+Interpretation:
+
+* If it reports `fallback_to_native: false`, run external draft early in the brainstorm flow, ideally right after task creation / PRD seed and before asking your first high-value question. Use the draft as a helper for questions / options / PRD scaffolding.
+  Example:
+
+```bash
+python3 ./.trellis/scripts/brainstorm_runner.py draft --goal "<current goal>"
+```
+
+Use the returned draft as input material only. You must still validate requirements with the user, update `prd.md`, and continue the normal brainstorm loop.
+When the draft succeeds and there is a current task, Trellis may append it to `prd.md` under `## External Brainstorm Draft`. Treat that section as draft material, not confirmed requirements.
+* If it reports `fallback_to_native: true`, continue with the normal native brainstorm flow in this skill.
+
+This external mode is **strictly optional** and must never block the default workflow. Missing config, missing env vars, timeout, or provider failure all mean: continue with native brainstorm.
+
 ---
 
 ## Step 1: Auto-Context (DO THIS BEFORE ASKING QUESTIONS)

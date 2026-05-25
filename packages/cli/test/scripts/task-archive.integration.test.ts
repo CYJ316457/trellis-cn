@@ -160,6 +160,30 @@ function writeConfig(repo: string, content: string): void {
   fs.writeFileSync(path.join(repo, ".trellis", "config.yaml"), content);
 }
 
+function runPythonScript(
+  repo: string,
+  scriptRelPath: string,
+  args: string[] = [],
+  env?: NodeJS.ProcessEnv,
+) {
+  const python = resolvePython();
+  if (!python) {
+    throw new Error("python is not available");
+  }
+  return spawnSync(
+    python.command,
+    [...python.args, scriptRelPath, ...args],
+    {
+      cwd: repo,
+      encoding: "utf-8",
+      env: {
+        ...process.env,
+        ...env,
+      },
+    },
+  );
+}
+
 describe.skipIf(!hasPython())(
   "task.py archive auto-commit",
   () => {
@@ -355,6 +379,125 @@ describe.skipIf(!hasPython())(
         fs.existsSync(path.join(archiveRoot, monthDir, "ready")),
       );
       expect(archived).toBe(true);
+    });
+
+    it("keeps external brainstorm disabled by default", () => {
+      const result = runPythonScript(
+        tmp,
+        ".trellis/scripts/brainstorm_runner.py",
+        ["status"],
+      );
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("enabled: false");
+      expect(result.stdout).toContain("mode: native");
+    });
+
+    it("reports fallback when external brainstorm is enabled but provider config is incomplete", () => {
+      writeConfig(
+        tmp,
+        [
+          "session_auto_commit: true",
+          "brainstorm:",
+          "  enabled: true",
+          "  mode: external",
+          "  provider: openai_compatible",
+          '  model: "deepseek-chat"',
+          '  api_key_env: "TRELLIS_BRAINSTORM_API_KEY"',
+        ].join("\n") + "\n",
+      );
+
+      const result = runPythonScript(
+        tmp,
+        ".trellis/scripts/brainstorm_runner.py",
+        ["status"],
+      );
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("enabled: true");
+      expect(result.stdout).toContain("mode: external");
+      expect(result.stdout).toContain("fallback_to_native: true");
+      expect(result.stdout).toContain("missing base_url");
+    });
+
+    it("draft falls back to native when external brainstorm config is incomplete", () => {
+      writeConfig(
+        tmp,
+        [
+          "brainstorm:",
+          "  enabled: true",
+          "  mode: external",
+          "  provider: openai_compatible",
+          '  api_key_env: "TRELLIS_BRAINSTORM_API_KEY"',
+          '  model: "deepseek-chat"',
+        ].join("\n") + "\n",
+      );
+
+      const result = runPythonScript(
+        tmp,
+        ".trellis/scripts/brainstorm_runner.py",
+        ["draft", "--goal", "Add a brainstorm helper"],
+      );
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain('"mode":"native_fallback"');
+      expect(result.stdout).toContain("missing base_url");
+    });
+
+    it("draft returns external brainstorm output when provider responds successfully", () => {
+      makeTask(tmp, "brainstorm-task", "# PRD\n\n## Goal\n\nExisting goal.\n");
+      fs.writeFileSync(
+        path.join(tmp, ".trellis", ".current-task"),
+        ".trellis/tasks/brainstorm-task\n",
+      );
+      writeConfig(
+        tmp,
+        [
+          "brainstorm:",
+          "  enabled: true",
+          "  mode: external",
+          "  provider: openai_compatible",
+          '  base_url: "https://llm.example.com/v1"',
+          '  api_key_env: "TRELLIS_BRAINSTORM_API_KEY"',
+          '  model: "deepseek-chat"',
+          "  timeout_seconds: 15",
+        ].join("\n") + "\n",
+      );
+
+      const payload = {
+        choices: [
+          {
+            message: {
+              content: "Question 1: What is the MVP scope?\nOption A: Keep it minimal.",
+            },
+          },
+        ],
+      };
+
+      const result = runPythonScript(
+        tmp,
+        ".trellis/scripts/brainstorm_runner.py",
+        ["draft", "--goal", "Add a brainstorm helper"],
+        {
+          TRELLIS_BRAINSTORM_API_KEY: "test-key",
+          TRELLIS_BRAINSTORM_FAKE_RESPONSE: JSON.stringify(payload),
+        },
+      );
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain('"mode":"external"');
+      expect(result.stdout).toContain("Question 1: What is the MVP scope?");
+      expect(result.stdout).toContain("Option A: Keep it minimal.");
+
+      const prdContent = fs.readFileSync(
+        path.join(tmp, ".trellis", "tasks", "brainstorm-task", "prd.md"),
+        "utf-8",
+      );
+      expect(prdContent).toContain("## Goal");
+      expect(prdContent).toContain("Existing goal.");
+      expect(prdContent).toContain("## External Brainstorm Draft");
+      expect(prdContent).toContain("Question 1: What is the MVP scope?");
+      expect(prdContent).toContain("Option A: Keep it minimal.");
     });
   },
 );

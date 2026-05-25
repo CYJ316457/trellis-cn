@@ -48,6 +48,29 @@ max_journal_lines: 2000
 # finish_work_checklist_validation: false
 
 #-------------------------------------------------------------------------------
+# Brainstorm External Model (opt-in, safe fallback)
+#-------------------------------------------------------------------------------
+
+# Optional external brainstorm model. Default disabled keeps the existing
+# workflow unchanged: brainstorming stays in the current AI session.
+#
+# When enabled, Trellis may invoke `.trellis/scripts/brainstorm_runner.py`
+# before the normal brainstorm Q&A loop. If config is incomplete or the
+# external provider fails, the workflow MUST fall back to native brainstorm.
+#
+# Security rule: never store API keys directly in this file. Store only the
+# environment variable name that contains the key.
+#
+# brainstorm:
+#   enabled: false
+#   mode: native          # native | external
+#   provider: openai_compatible
+#   base_url: https://example.com/v1
+#   api_key_env: TRELLIS_BRAINSTORM_API_KEY
+#   model: deepseek-chat
+#   timeout_seconds: 60
+
+#-------------------------------------------------------------------------------
 # Task Lifecycle Hooks
 #-------------------------------------------------------------------------------
 

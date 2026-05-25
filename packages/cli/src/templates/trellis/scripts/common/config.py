@@ -168,6 +168,9 @@ DEFAULT_SESSION_COMMIT_MESSAGE = "chore: record journal"
 DEFAULT_MAX_JOURNAL_LINES = 2000
 DEFAULT_SESSION_AUTO_COMMIT = True
 DEFAULT_FINISH_WORK_CHECKLIST_VALIDATION = False
+DEFAULT_BRAINSTORM_ENABLED = False
+DEFAULT_BRAINSTORM_MODE = "native"
+DEFAULT_BRAINSTORM_TIMEOUT_SECONDS = 60
 
 CONFIG_FILE = "config.yaml"
 
@@ -270,6 +273,55 @@ def get_finish_work_checklist_validation(repo_root: Path | None = None) -> bool:
         DEFAULT_FINISH_WORK_CHECKLIST_VALIDATION,
         "finish_work_checklist_validation",
     )
+
+
+def get_brainstorm_config(repo_root: Path | None = None) -> dict[str, object]:
+    """Get external brainstorm configuration with safe defaults.
+
+    This feature is opt-in and defaults to native brainstorm behavior so
+    existing projects keep the current workflow unchanged.
+    """
+    config = _load_config(repo_root)
+    brainstorm = config.get("brainstorm")
+    if not isinstance(brainstorm, dict):
+        brainstorm = {}
+
+    enabled = _parse_bool_setting(
+        brainstorm.get("enabled", DEFAULT_BRAINSTORM_ENABLED),
+        DEFAULT_BRAINSTORM_ENABLED,
+        "brainstorm.enabled",
+    )
+
+    raw_mode = str(brainstorm.get("mode", DEFAULT_BRAINSTORM_MODE)).strip().lower()
+    mode = raw_mode if raw_mode in ("native", "external") else DEFAULT_BRAINSTORM_MODE
+    if raw_mode not in ("native", "external"):
+        print(
+            f"[WARN] invalid brainstorm.mode value: {raw_mode!r}; using {DEFAULT_BRAINSTORM_MODE}",
+            file=sys.stderr,
+        )
+
+    raw_timeout = brainstorm.get(
+        "timeout_seconds",
+        DEFAULT_BRAINSTORM_TIMEOUT_SECONDS,
+    )
+    try:
+        timeout_seconds = int(raw_timeout)
+    except (TypeError, ValueError):
+        timeout_seconds = DEFAULT_BRAINSTORM_TIMEOUT_SECONDS
+        print(
+            f"[WARN] invalid brainstorm.timeout_seconds value: {raw_timeout!r}; using {DEFAULT_BRAINSTORM_TIMEOUT_SECONDS}",
+            file=sys.stderr,
+        )
+
+    return {
+        "enabled": enabled,
+        "mode": mode,
+        "provider": str(brainstorm.get("provider", "")).strip(),
+        "base_url": str(brainstorm.get("base_url", "")).strip(),
+        "api_key_env": str(brainstorm.get("api_key_env", "")).strip(),
+        "model": str(brainstorm.get("model", "")).strip(),
+        "timeout_seconds": timeout_seconds,
+    }
 
 
 def get_hooks(event: str, repo_root: Path | None = None) -> list[str]:

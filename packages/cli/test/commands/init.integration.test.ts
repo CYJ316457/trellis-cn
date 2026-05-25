@@ -812,6 +812,43 @@ describe("init() integration", () => {
     expect(fs.existsSync(path.join(specDir, "guides", "index.md"))).toBe(true);
   });
 
+  it("#10b installs optional brainstorm runner assets without changing default behavior", async () => {
+    await init({ yes: true });
+
+    const runnerPath = path.join(
+      tmpDir,
+      ".trellis",
+      "scripts",
+      "brainstorm_runner.py",
+    );
+    expect(fs.existsSync(runnerPath)).toBe(true);
+
+    const configContent = fs.readFileSync(
+      path.join(tmpDir, ".trellis", "config.yaml"),
+      "utf-8",
+    );
+    expect(configContent).toContain("# Brainstorm External Model");
+    expect(configContent).toContain("#   enabled: false");
+    expect(configContent).toContain("#   api_key_env: TRELLIS_BRAINSTORM_API_KEY");
+
+    const brainstormSkill = fs.readFileSync(
+      path.join(
+        tmpDir,
+        ".claude",
+        "skills",
+        "trellis-brainstorm",
+        "SKILL.md",
+      ),
+      "utf-8",
+    );
+    expect(brainstormSkill).toContain(
+      "run external draft early in the brainstorm flow",
+    );
+    expect(brainstormSkill).toContain(
+      "brainstorm_runner.py draft --goal",
+    );
+  });
+
   it("#11 backend project init skips frontend spec templates", async () => {
     // go.mod triggers detectProjectType → "backend"
     fs.writeFileSync(path.join(tmpDir, "go.mod"), "module example.com/app\n");
