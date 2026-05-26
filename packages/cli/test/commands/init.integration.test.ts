@@ -829,7 +829,12 @@ describe("init() integration", () => {
     );
     expect(configContent).toContain("# Brainstorm External Model");
     expect(configContent).toContain("#   enabled: false");
-    expect(configContent).toContain("#   api_key_env: TRELLIS_BRAINSTORM_API_KEY");
+    expect(configContent).toContain("#   api_key: sk-xxx");
+    expect(configContent).toContain("#   # api_key_env: DEEPSEEK_API_KEY");
+    expect(configContent).toContain("# Planning Enhancement (opt-in, safe fallback)");
+    expect(configContent).toContain("# Quality Check Enhancement (opt-in, safe fallback)");
+    expect(configContent).toContain("# check:");
+    expect(configContent).toContain("#   enhanced: false");
 
     const brainstormSkill = fs.readFileSync(
       path.join(

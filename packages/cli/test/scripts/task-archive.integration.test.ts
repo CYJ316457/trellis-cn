@@ -381,7 +381,90 @@ describe.skipIf(!hasPython())(
       expect(archived).toBe(true);
     });
 
-    it("keeps external brainstorm disabled by default", () => {
+
+
+ it("keeps enhanced planning disabled by default", () => {
+ const result = runPythonScript(
+ tmp,
+ ".trellis/scripts/planning_runner.py",
+ ["status"],
+ );
+
+ expect(result.status).toBe(0);
+ expect(result.stdout).toContain("enhanced: false");
+ expect(result.stdout).toContain("fallback_to_native: false");
+ });
+
+ it("planning turn falls back when enhanced provider config is incomplete", () => {
+ writeConfig(
+ tmp,
+ [
+ "planning:",
+ " enhanced: true",
+ " provider: deepseek",
+ " model: deepseek-chat",
+ ].join("\n") + "\n",
+ );
+
+ const result = runPythonScript(
+ tmp,
+ ".trellis/scripts/planning_runner.py",
+ ["turn", "--goal", "Plan enhanced mode"],
+ );
+
+ expect(result.status).toBe(0);
+ expect(result.stdout).toContain('"mode":"native_fallback"');
+ expect(result.stdout).toContain("missing base_url");
+ });
+
+ it("planning turn writes validated enhanced planning artifacts", () => {
+ makeTask(tmp, "planning-task", "# Old PRD\n");
+ fs.mkdirSync(path.join(tmp, ".trellis", ".runtime", "sessions"), { recursive: true });
+ fs.writeFileSync(
+ path.join(tmp, ".trellis", ".runtime", "sessions", "codex_test.json"),
+ JSON.stringify({ current_task: ".trellis/tasks/planning-task" }) + "\n",
+ );
+ writeConfig(
+ tmp,
+ [
+ "planning:",
+ " enhanced: true",
+ " provider: deepseek",
+ " base_url: https://llm.example.com/v1",
+ " api_key_env: TRELLIS_PLANNING_API_KEY",
+ " model: deepseek-chat",
+ ].join("\n") + "\n",
+ );
+ const planning = {
+ prd_md: "# Enhanced PRD\n",
+ implement_jsonl: JSON.stringify({ file: ".trellis/spec/guides/index.md", reason: "implementation context" }) + "\n",
+ check_jsonl: JSON.stringify({ file: ".trellis/spec/cli/unit-test/index.md", reason: "verification context" }) + "\n",
+ assistant_message: "Ready to start",
+ next_action: "task.py start",
+ readiness: "ready",
+ research_topics: ["planning fallback"],
+ };
+ const response = { choices: [{ message: { content: JSON.stringify(planning) } }] };
+
+ const result = runPythonScript(
+ tmp,
+ ".trellis/scripts/planning_runner.py",
+ ["turn", "--goal", "Plan enhanced mode"],
+ {
+ TRELLIS_CONTEXT_ID: "codex_test",
+ TRELLIS_PLANNING_API_KEY: "test-key",
+ TRELLIS_PLANNING_FAKE_RESPONSE: JSON.stringify(response),
+ },
+ );
+
+ expect(result.status).toBe(0);
+ expect(result.stdout).toContain('"mode":"enhanced"');
+ expect(fs.readFileSync(path.join(tmp, ".trellis", "tasks", "planning-task", "prd.md"), "utf-8")).toContain("# Enhanced PRD");
+ expect(fs.readFileSync(path.join(tmp, ".trellis", "tasks", "planning-task", "implement.jsonl"), "utf-8")).toContain("implementation context");
+ expect(fs.readFileSync(path.join(tmp, ".trellis", "tasks", "planning-task", "check.jsonl"), "utf-8")).toContain("verification context");
+ });
+
+ it("keeps external brainstorm disabled by default", () => {
       const result = runPythonScript(
         tmp,
         ".trellis/scripts/brainstorm_runner.py",

@@ -275,6 +275,46 @@ def _codex_mode_banner(config: dict) -> str:
     return f"<codex-mode>{mode}</codex-mode>"
 
 
+
+def _planning_mode_banner(status: str, config: dict) -> str:
+    """Emit enhanced-planning markers only for planning tasks that opt in."""
+    if status != "planning":
+        return ""
+    try:
+        from common.trellis_config import (
+            get_planning_model_profile,
+            is_planning_enhanced,
+        )
+    except Exception:
+        return ""
+    if not is_planning_enhanced(config):
+        return ""
+    profile = get_planning_model_profile(config)
+    return (
+        "<planning-mode>enhanced</planning-mode>\n"
+        f"<planning-model-profile>{profile}</planning-model-profile>"
+    )
+
+
+def _check_mode_banner(status: str, config: dict) -> str:
+    """Emit enhanced-check markers only for in-progress tasks that opt in."""
+    if status != "in_progress":
+        return ""
+    try:
+        from common.trellis_config import (
+            get_check_model_profile,
+            is_check_enhanced,
+        )
+    except Exception:
+        return ""
+    if not is_check_enhanced(config):
+        return ""
+    profile = get_check_model_profile(config)
+    return (
+        "<check-mode>enhanced</check-mode>\n"
+        f"<check-model-profile>{profile}</check-model-profile>"
+    )
+
 def resolve_breadcrumb_key(
     status: str, platform: str | None, config: dict
 ) -> str:
@@ -373,13 +413,27 @@ def main() -> int:
         breadcrumb = build_breadcrumb(
             task_id, status, templates, source, breadcrumb_key=status_key
         )
+    planning_banner = ""
+    check_banner = ""
+    if task is not None:
+        planning_banner = _planning_mode_banner(task[1], config)
+        check_banner = _check_mode_banner(task[1], config)
+
     if platform == "codex":
         parts: list[str] = [CODEX_SUB_AGENT_NOTICE]
         if task is None:
             parts.append(CODEX_NO_TASK_BOOTSTRAP_NOTICE)
         parts.append(_codex_mode_banner(config))
+        if planning_banner:
+            parts.append(planning_banner)
+        if check_banner:
+            parts.append(check_banner)
         parts.append(breadcrumb)
         breadcrumb = "\n\n".join(parts)
+    elif planning_banner or check_banner:
+        banners = [banner for banner in (planning_banner, check_banner) if banner]
+        breadcrumb = "\n\n".join([*banners, breadcrumb])
+
 
     # Gemini CLI 0.40.x rejects "UserPromptSubmit" — its per-turn event is
     # named "BeforeAgent". Other platforms (Claude/Cursor/Qoder/CodeBuddy/

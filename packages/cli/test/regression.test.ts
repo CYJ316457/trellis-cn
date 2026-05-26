@@ -4069,7 +4069,20 @@ print(len(entries))
     );
   });
 
-  it("[issue-codex-dispatch-mode] non-codex hook does NOT inject <codex-mode> banner", () => {
+  it("[planning-enhanced] hook source gates planning markers behind explicit config", () => {
+ expect(injectWorkflowStateScript).toContain("<planning-mode>enhanced</planning-mode>");
+ expect(injectWorkflowStateScript).toContain("is_planning_enhanced(config)");
+ expect(injectWorkflowStateScript).toContain("status != \"planning\"");
+ });
+
+  it("[check-enhanced] hook source gates check markers behind explicit config", () => {
+ expect(injectWorkflowStateScript).toContain("<check-mode>enhanced</check-mode>");
+ expect(injectWorkflowStateScript).toContain("<check-model-profile>{profile}</check-model-profile>");
+ expect(injectWorkflowStateScript).toContain("is_check_enhanced(config)");
+ expect(injectWorkflowStateScript).toContain("status != \"in_progress\"");
+ });
+
+ it("[issue-codex-dispatch-mode] non-codex hook does NOT inject <codex-mode> banner", () => {
     setupTaskRepo();
     writeSessionContext("session_workflow-a", ".trellis/tasks/issue-106");
     // Hook installed under .claude/ — _detect_platform returns "claude".
@@ -5912,7 +5925,41 @@ describe("regression: configSectionsAdded (issue-codex-dispatch-mode)", () => {
     expect(entry?.sectionHeading).toBe("Codex (dispatch behavior)");
   });
 
-  it("[config-sections] bundled config.yaml template contains the new Codex section", () => {
+  it("[config-sections] manifest0.6.0-beta.19 declares the planning enhancement section", () => {
+ const manifestPath = path.join(
+ path.dirname(fileURLToPath(import.meta.url)),
+ "..",
+ "src",
+ "migrations",
+ "manifests",
+ "0.6.0-beta.19.json",
+ );
+ const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8")) as {
+ configSectionsAdded?: { file: string; sentinel: string; sectionHeading: string }[];
+ };
+ const entry = manifest.configSectionsAdded?.find((item) => item.sentinel === "planning:");
+ expect(entry?.file).toBe(".trellis/config.yaml");
+ expect(entry?.sectionHeading).toBe("Planning Enhancement (opt-in, safe fallback)");
+ });
+
+  it("[config-sections] manifest0.6.0-beta.19 declares the check enhancement section", () => {
+ const manifestPath = path.join(
+ path.dirname(fileURLToPath(import.meta.url)),
+ "..",
+ "src",
+ "migrations",
+ "manifests",
+ "0.6.0-beta.19.json",
+ );
+ const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8")) as {
+ configSectionsAdded?: { file: string; sentinel: string; sectionHeading: string }[];
+ };
+ const entry = manifest.configSectionsAdded?.find((item) => item.sentinel === "check:");
+ expect(entry?.file).toBe(".trellis/config.yaml");
+ expect(entry?.sectionHeading).toBe("Quality Check Enhancement (opt-in, safe fallback)");
+ });
+
+ it("[config-sections] bundled config.yaml template contains the new Codex section", () => {
     // Ensures the section the manifest points at actually exists in the
     // bundled template — protects against renaming heading without updating
     // the manifest entry.
@@ -5927,6 +5974,8 @@ describe("regression: configSectionsAdded (issue-codex-dispatch-mode)", () => {
     const tmpl = fs.readFileSync(tmplPath, "utf-8");
     expect(tmpl).toContain("# Codex (dispatch behavior)");
     expect(tmpl).toContain("dispatch_mode");
+    expect(tmpl).toContain("# Planning Enhancement (opt-in, safe fallback)");
+    expect(tmpl).toContain("# Quality Check Enhancement (opt-in, safe fallback)");
   });
 });
 

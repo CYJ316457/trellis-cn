@@ -58,17 +58,72 @@ max_journal_lines: 2000
 # before the normal brainstorm Q&A loop. If config is incomplete or the
 # external provider fails, the workflow MUST fall back to native brainstorm.
 #
-# Security rule: never store API keys directly in this file. Store only the
-# environment variable name that contains the key.
+# API key: use api_key (explicit) or api_key_env (env var name).
+# At least one must be set when mode is external.
+# WARNING: config.yaml is git-tracked; prefer api_key_env for shared repos.
 #
 # brainstorm:
 #   enabled: false
 #   mode: native          # native | external
-#   provider: openai_compatible
-#   base_url: https://example.com/v1
-#   api_key_env: TRELLIS_BRAINSTORM_API_KEY
+#   provider: deepseek
+#   base_url: https://api.deepseek.com/v1
 #   model: deepseek-chat
+#   api_key: sk-xxx                   # explicit key (prefer api_key_env for security)
+#   # api_key_env: DEEPSEEK_API_KEY   # env var name (fallback if api_key is empty)
 #   timeout_seconds: 60
+
+#-------------------------------------------------------------------------------
+# Planning Enhancement (opt-in, safe fallback)
+#-------------------------------------------------------------------------------
+
+# Optional enhanced Phase1 planning helper. Default disabled keeps the old
+# brainstorm / research / jsonl workflow unchanged.
+#
+# When enabled, Trellis may invoke `.trellis/scripts/planning_runner.py` to
+# draft full `prd.md`, `implement.jsonl`, and `check.jsonl` contents. Missing
+# config, invalid model output, timeout, or provider failure MUST fall back to
+# the original planning flow.
+#
+# API key: use api_key (explicit) or api_key_env (env var name).
+# WARNING: config.yaml is git-tracked; prefer api_key_env for shared repos.
+#
+# planning:
+# enhanced: false
+# model_profile: strong
+# provider: deepseek
+# base_url: https://api.deepseek.com/v1
+# model: deepseek-chat
+# api_key: sk-xxx # explicit key (prefer api_key_env for security)
+# # api_key_env: DEEPSEEK_API_KEY # env var name (fallback if api_key is empty)
+# reasoning_effort: high
+# timeout_seconds:120
+# retry_count:1
+
+#-------------------------------------------------------------------------------
+# Quality Check Enhancement (opt-in, safe fallback)
+#-------------------------------------------------------------------------------
+
+# Optional enhanced Phase2.2 / Phase3.1 quality-check helper. Default disabled
+# keeps the original `trellis-check` workflow unchanged.
+#
+# When enabled, Trellis may route Phase 2.2 / 3.1 with stronger model intent.
+# Unsupported overrides, incomplete config, or runtime failures MUST fall back
+# to the original native `trellis-check` path.
+#
+# API key: use api_key (explicit) or api_key_env (env var name).
+# WARNING: config.yaml is git-tracked; prefer api_key_env for shared repos.
+#
+# check:
+#   enhanced: false
+#   model_profile: strong
+#   provider: deepseek
+#   base_url: https://api.deepseek.com/v1
+#   model: deepseek-chat
+#   api_key: sk-xxx                   # explicit key (prefer api_key_env for security)
+#   # api_key_env: DEEPSEEK_API_KEY   # env var name (fallback if api_key is empty)
+#   reasoning_effort: high
+#   timeout_seconds: 120
+#   retry_count: 1
 
 #-------------------------------------------------------------------------------
 # Task Lifecycle Hooks

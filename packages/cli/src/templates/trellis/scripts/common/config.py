@@ -171,6 +171,14 @@ DEFAULT_FINISH_WORK_CHECKLIST_VALIDATION = False
 DEFAULT_BRAINSTORM_ENABLED = False
 DEFAULT_BRAINSTORM_MODE = "native"
 DEFAULT_BRAINSTORM_TIMEOUT_SECONDS = 60
+DEFAULT_PLANNING_ENHANCED = False
+DEFAULT_PLANNING_MODEL_PROFILE = "strong"
+DEFAULT_PLANNING_TIMEOUT_SECONDS = 120
+DEFAULT_PLANNING_RETRY_COUNT = 1
+DEFAULT_CHECK_ENHANCED = False
+DEFAULT_CHECK_MODEL_PROFILE = "strong"
+DEFAULT_CHECK_TIMEOUT_SECONDS = 120
+DEFAULT_CHECK_RETRY_COUNT = 1
 
 CONFIG_FILE = "config.yaml"
 
@@ -332,6 +340,116 @@ def get_brainstorm_config(repo_root: Path | None = None) -> dict[str, object]:
         "timeout_seconds": timeout_seconds,
     }
 
+
+def _parse_int_setting(raw: object, default: int, setting_name: str, minimum: int =0) -> int:
+    """Parse an integer config value with a safe default and warning."""
+    try:
+        parsed = int(raw)
+    except (TypeError, ValueError):
+        print(
+            f"[WARN] invalid {setting_name} value: {raw!r}; using {default}",
+            file=sys.stderr,
+        )
+        return default
+    if parsed < minimum:
+        print(
+            f"[WARN] invalid {setting_name} value: {raw!r}; using {default}",
+            file=sys.stderr,
+        )
+        return default
+    return parsed
+
+
+def get_planning_config(repo_root: Path | None = None) -> dict[str, object]:
+    """Get optional enhanced planning configuration with safe defaults.
+
+    Enhanced planning is strictly opt-in. Missing config, invalid booleans,
+    missing provider fields, provider failures, or invalid model output must
+    fall back to the original native brainstorm/research/jsonl workflow.
+    """
+    config = _load_config(repo_root)
+    planning = config.get("planning")
+    if not isinstance(planning, dict):
+        planning = {}
+
+    enhanced = _parse_bool_setting(
+        planning.get("enhanced", DEFAULT_PLANNING_ENHANCED),
+        DEFAULT_PLANNING_ENHANCED,
+        "planning.enhanced",
+    )
+    timeout_seconds = _parse_int_setting(
+        planning.get("timeout_seconds", DEFAULT_PLANNING_TIMEOUT_SECONDS),
+        DEFAULT_PLANNING_TIMEOUT_SECONDS,
+        "planning.timeout_seconds",
+        minimum=1,
+    )
+    retry_count = _parse_int_setting(
+        planning.get("retry_count", DEFAULT_PLANNING_RETRY_COUNT),
+        DEFAULT_PLANNING_RETRY_COUNT,
+        "planning.retry_count",
+        minimum=0,
+    )
+
+    return {
+        "enhanced": enhanced,
+        "model_profile": str(
+            planning.get("model_profile", DEFAULT_PLANNING_MODEL_PROFILE)
+        ).strip() or DEFAULT_PLANNING_MODEL_PROFILE,
+        "provider": str(planning.get("provider", "")).strip(),
+        "base_url": str(planning.get("base_url", "")).strip(),
+        "api_key": str(planning.get("api_key", "")).strip(),
+        "api_key_env": str(planning.get("api_key_env", "")).strip(),
+        "model": str(planning.get("model", "")).strip(),
+        "reasoning_effort": str(planning.get("reasoning_effort", "")).strip(),
+        "timeout_seconds": timeout_seconds,
+        "retry_count": retry_count,
+    }
+
+
+def get_check_config(repo_root: Path | None = None) -> dict[str, object]:
+    """Get optional enhanced quality-check configuration with safe defaults.
+
+    Enhanced check is strictly opt-in. Missing config, invalid booleans,
+    missing provider fields, unsupported model overrides, or runtime failures
+    must fall back to the original native ``trellis-check`` workflow.
+    """
+    config = _load_config(repo_root)
+    check = config.get("check")
+    if not isinstance(check, dict):
+        check = {}
+
+    enhanced = _parse_bool_setting(
+        check.get("enhanced", DEFAULT_CHECK_ENHANCED),
+        DEFAULT_CHECK_ENHANCED,
+        "check.enhanced",
+    )
+    timeout_seconds = _parse_int_setting(
+        check.get("timeout_seconds", DEFAULT_CHECK_TIMEOUT_SECONDS),
+        DEFAULT_CHECK_TIMEOUT_SECONDS,
+        "check.timeout_seconds",
+        minimum=1,
+    )
+    retry_count = _parse_int_setting(
+        check.get("retry_count", DEFAULT_CHECK_RETRY_COUNT),
+        DEFAULT_CHECK_RETRY_COUNT,
+        "check.retry_count",
+        minimum=0,
+    )
+
+    return {
+        "enhanced": enhanced,
+        "model_profile": str(
+            check.get("model_profile", DEFAULT_CHECK_MODEL_PROFILE)
+        ).strip() or DEFAULT_CHECK_MODEL_PROFILE,
+        "provider": str(check.get("provider", "")).strip(),
+        "base_url": str(check.get("base_url", "")).strip(),
+        "api_key": str(check.get("api_key", "")).strip(),
+        "api_key_env": str(check.get("api_key_env", "")).strip(),
+        "model": str(check.get("model", "")).strip(),
+        "reasoning_effort": str(check.get("reasoning_effort", "")).strip(),
+        "timeout_seconds": timeout_seconds,
+        "retry_count": retry_count,
+    }
 
 def get_hooks(event: str, repo_root: Path | None = None) -> list[str]:
     """Get hook commands for a lifecycle event.

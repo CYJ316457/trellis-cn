@@ -115,6 +115,10 @@ Create/seed `prd.md` immediately with what you know:
 * <research notes summary if applicable>
 ```
 
+### Enhanced planning mode takes precedence (opt-in only)
+
+If `.trellis/config.yaml` explicitly sets `planning.enhanced: true`, do **not** separately run `brainstorm_runner.py`. Enhanced planning uses `.trellis/scripts/planning_runner.py` and absorbs the optional external-brainstorm role so the workflow does not double-call external models. If enhanced planning is missing, disabled, or falls back, continue with the normal rules below.
+
 ### Optional external brainstorm mode (opt-in only)
 
 If `.trellis/config.yaml` enables:

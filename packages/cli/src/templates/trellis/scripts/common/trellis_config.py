@@ -129,3 +129,48 @@ def read_trellis_config(repo_root: Optional[Path] = None) -> dict:
     except Exception:
         return {}
     return parsed if isinstance(parsed, dict) else {}
+
+def parse_bool_setting(raw: object, default: bool = False) -> bool:
+    """Parse a Trellis boolean config value with common aliases."""
+    if isinstance(raw, bool):
+        return raw
+    value = str(raw).strip().lower()
+    if value in ("true", "yes", "1", "on"):
+        return True
+    if value in ("false", "no", "0", "off"):
+        return False
+    return default
+
+
+def is_planning_enhanced(config: dict) -> bool:
+    """Return True only when planning.enhanced is explicitly truthy."""
+    planning = config.get("planning") if isinstance(config, dict) else None
+    if not isinstance(planning, dict):
+        return False
+    return parse_bool_setting(planning.get("enhanced"), False)
+
+
+def get_planning_model_profile(config: dict) -> str:
+    """Return the configured planning model profile or the safe default."""
+    planning = config.get("planning") if isinstance(config, dict) else None
+    if not isinstance(planning, dict):
+        return "strong"
+    profile = str(planning.get("model_profile", "strong")).strip()
+    return profile or "strong"
+
+
+def is_check_enhanced(config: dict) -> bool:
+    """Return True only when check.enhanced is explicitly truthy."""
+    check = config.get("check") if isinstance(config, dict) else None
+    if not isinstance(check, dict):
+        return False
+    return parse_bool_setting(check.get("enhanced"), False)
+
+
+def get_check_model_profile(config: dict) -> str:
+    """Return the configured check model profile or the safe default."""
+    check = config.get("check") if isinstance(config, dict) else None
+    if not isinstance(check, dict):
+        return "strong"
+    profile = str(check.get("model_profile", "strong")).strip()
+    return profile or "strong"

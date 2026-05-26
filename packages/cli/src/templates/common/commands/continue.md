@@ -24,6 +24,7 @@ Shows the Phase Index (Plan / Execute / Finish) with routing + skill mapping.
 
 `get_context.py` shows the active task's `status` field. Route by `status` + artifact presence:
 
+- `status=planning` + `.trellis/config.yaml` explicitly has `planning.enhanced: true` → first run `.trellis/scripts/planning_runner.py status`, then `turn --goal "<current goal>"` if status is usable; on any failure/fallback, continue with the normal planning routes below.
 - `status=planning` + no `prd.md` → **1.1** (load `trellis-brainstorm`)
 - `status=planning` + `prd.md` exists + `implement.jsonl` not curated (only the seed `_example` row) → **1.3**
 - `status=planning` + `prd.md` + curated `implement.jsonl` → **1.4** (run `task.py start` to enter Phase 2)

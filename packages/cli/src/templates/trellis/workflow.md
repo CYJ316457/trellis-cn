@@ -164,7 +164,8 @@ Phase 3: Finish  → 沉淀经验并收尾
 
 [workflow-state:planning]
 加载 `trellis-brainstorm` skill，与用户迭代 `prd.md`。
-如果 `.trellis/config.yaml` 显式开启了 `brainstorm.mode: external`，可以先让 `.trellis/scripts/brainstorm_runner.py` 辅助生成问题草案 / 方案草案 / PRD 草稿；如果外部配置不完整或调用失败，必须立即回退到原生 brainstorm 流程。
+如果 `.trellis/config.yaml` 显式开启了 `planning.enhanced: true`，优先运行 `.trellis/scripts/planning_runner.py status` / `turn --goal "<current goal>"`作为 Phase1 强规划助手；它可以一次性产出完整 `prd.md`、`implement.jsonl`、`check.jsonl` 草案。任何缺配置、超时、provider失败或输出校验失败，都必须立即回退到原生 brainstorm / research / jsonl 流程。
+如果未开启 `planning.enhanced`，但 如果 `.trellis/config.yaml` 显式开启了 `brainstorm.mode: external`，可以先让 `.trellis/scripts/brainstorm_runner.py` 辅助生成问题草案 / 方案草案 / PRD 草稿；如果外部配置不完整或调用失败，必须立即回退到原生 brainstorm 流程。
 执行 Phase 1 任一步骤时，开始前打印 `📌步骤 X.Y 开始执行`，完成后打印 `✅步骤 X.Y 执行完成`；如果跳过，打印 `⏭️步骤 X.Y 跳过，跳过原因：<原因>`。
 读取或写入任意规范 `.md` 文件前，打印 `🦆正在读规范<文件名>.md` 或 `🦆正在写规范<文件名>.md`。
 Phase 1.3 (required, once)：在运行 `task.py start` 之前，MUST curate `implement.jsonl` 和 `check.jsonl` — 列出 sub-agents 需要的 spec / research 文件，确保注入正确上下文。只有当 jsonl 已经包含 agent-curated entries 时才可以跳过 (仅有 seed `_example` 行不算)。
