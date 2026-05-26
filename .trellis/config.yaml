@@ -72,3 +72,24 @@ hooks:
 #
 codex:
   dispatch_mode: inline  # or "inline" to let the main agent edit code directly
+
+#-------------------------------------------------------------------------------
+# External Brainstorm (optional)
+#-------------------------------------------------------------------------------
+# When enabled with mode: external, brainstorm_runner.py calls an
+# OpenAI-compatible /chat/completions endpoint to generate draft PRD material
+# before the native brainstorm flow.
+#
+# API key: use api_key (explicit) or api_key_env (env var name).
+# At least one must be set when mode is external.
+# WARNING: config.yaml is git-tracked; prefer api_key_env for shared repos.
+#
+# brainstorm:
+#   enabled: true
+#   mode: external
+#   provider: deepseek
+#   base_url: https://api.deepseek.com/v1
+#   model: deepseek-chat
+#   api_key: sk-xxx                   # explicit key (prefer api_key_env for security)
+#   # api_key_env: DEEPSEEK_API_KEY   # env var name (fallback if api_key is empty)
+#   timeout_seconds: 60

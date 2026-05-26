@@ -280,6 +280,14 @@ def get_brainstorm_config(repo_root: Path | None = None) -> dict[str, object]:
 
     This feature is opt-in and defaults to native brainstorm behavior so
     existing projects keep the current workflow unchanged.
+
+    API key resolution order:
+        1. ``api_key`` — explicit key in config (prefer for convenience;
+           **note: config.yaml is git-tracked by default, so prefer
+           api_key_env for shared repos**)
+        2. ``api_key_env`` — environment variable name (prefer for security)
+
+    At least one must be set when mode is "external".
     """
     config = _load_config(repo_root)
     brainstorm = config.get("brainstorm")
@@ -318,6 +326,7 @@ def get_brainstorm_config(repo_root: Path | None = None) -> dict[str, object]:
         "mode": mode,
         "provider": str(brainstorm.get("provider", "")).strip(),
         "base_url": str(brainstorm.get("base_url", "")).strip(),
+        "api_key": str(brainstorm.get("api_key", "")).strip(),
         "api_key_env": str(brainstorm.get("api_key_env", "")).strip(),
         "model": str(brainstorm.get("model", "")).strip(),
         "timeout_seconds": timeout_seconds,

@@ -142,6 +142,11 @@ def _next_content_line(lines: list[str], start: int) -> tuple[int, str]:
 # Defaults
 DEFAULT_SESSION_COMMIT_MESSAGE = "chore: record journal"
 DEFAULT_MAX_JOURNAL_LINES = 2000
+DEFAULT_SESSION_AUTO_COMMIT = True
+DEFAULT_FINISH_WORK_CHECKLIST_VALIDATION = False
+DEFAULT_BRAINSTORM_ENABLED = False
+DEFAULT_BRAINSTORM_MODE = "native"
+DEFAULT_BRAINSTORM_TIMEOUT_SECONDS = 60
 
 CONFIG_FILE = "config.yaml"
 
@@ -153,6 +158,26 @@ def _is_true_config_value(value: object) -> bool:
     if isinstance(value, str):
         return value.strip().lower() == "true"
     return False
+
+
+def _parse_bool_setting(
+    raw: object,
+    default: bool,
+    setting_name: str,
+) -> bool:
+    """Parse a Trellis boolean config value with the usual alias set."""
+    if isinstance(raw, bool):
+        return raw
+    s = str(raw).strip().lower()
+    if s in ("true", "yes", "1", "on"):
+        return True
+    if s in ("false", "no", "0", "off"):
+        return False
+    print(
+        f"[WARN] invalid {setting_name} value: {raw!r}; using {str(default).lower()} (default)",
+        file=sys.stderr,
+    )
+    return default
 
 
 def _get_config_path(repo_root: Path | None = None) -> Path:
@@ -205,6 +230,64 @@ def get_hooks(event: str, repo_root: Path | None = None) -> list[str]:
     if isinstance(commands, list):
         return [str(c) for c in commands]
     return []
+
+
+def get_brainstorm_config(repo_root: Path | None = None) -> dict[str, object]:
+    """Get external brainstorm configuration with safe defaults.
+
+    This feature is opt-in and defaults to native brainstorm behavior so
+    existing projects keep the current workflow unchanged.
+
+    API key resolution order:
+        1. ``api_key`` — explicit key in config (prefer for convenience;
+           **note: config.yaml is git-tracked by default, so prefer
+           api_key_env for shared repos**)
+        2. ``api_key_env`` — environment variable name (prefer for security)
+
+    At least one must be set when mode is "external".
+    """
+    config = _load_config(repo_root)
+    brainstorm = config.get("brainstorm")
+    if not isinstance(brainstorm, dict):
+        brainstorm = {}
+
+    enabled = _parse_bool_setting(
+        brainstorm.get("enabled", DEFAULT_BRAINSTORM_ENABLED),
+        DEFAULT_BRAINSTORM_ENABLED,
+        "brainstorm.enabled",
+    )
+
+    raw_mode = str(brainstorm.get("mode", DEFAULT_BRAINSTORM_MODE)).strip().lower()
+    mode = raw_mode if raw_mode in ("native", "external") else DEFAULT_BRAINSTORM_MODE
+    if raw_mode not in ("native", "external"):
+        print(
+            f"[WARN] invalid brainstorm.mode value: {raw_mode!r}; using {DEFAULT_BRAINSTORM_MODE}",
+            file=sys.stderr,
+        )
+
+    raw_timeout = brainstorm.get(
+        "timeout_seconds",
+        DEFAULT_BRAINSTORM_TIMEOUT_SECONDS,
+    )
+    try:
+        timeout_seconds = int(raw_timeout)
+    except (TypeError, ValueError):
+        timeout_seconds = DEFAULT_BRAINSTORM_TIMEOUT_SECONDS
+        print(
+            f"[WARN] invalid brainstorm.timeout_seconds value: {raw_timeout!r}; using {DEFAULT_BRAINSTORM_TIMEOUT_SECONDS}",
+            file=sys.stderr,
+        )
+
+    return {
+        "enabled": enabled,
+        "mode": mode,
+        "provider": str(brainstorm.get("provider", "")).strip(),
+        "base_url": str(brainstorm.get("base_url", "")).strip(),
+        "api_key": str(brainstorm.get("api_key", "")).strip(),
+        "api_key_env": str(brainstorm.get("api_key_env", "")).strip(),
+        "model": str(brainstorm.get("model", "")).strip(),
+        "timeout_seconds": timeout_seconds,
+    }
 
 
 # =============================================================================
