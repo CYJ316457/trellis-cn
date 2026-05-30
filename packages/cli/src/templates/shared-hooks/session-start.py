@@ -19,6 +19,11 @@ from io import StringIO
 from pathlib import Path
 
 
+def hook_log(message: str) -> None:
+    if os.environ.get("TRELLIS_HOOK_DEBUG") == "1":
+        print(f"[trellis-hook] {message}", file=sys.stderr, flush=True)
+
+
 def _normalize_windows_shell_path(path_str: str) -> str:
     """Normalize Unix-style shell paths to real Windows paths.
 
@@ -719,7 +724,9 @@ def _build_workflow_overview(workflow_path: Path) -> str:
 
 
 def main():
+    hook_log("session-start start")
     if should_skip_injection():
+        hook_log("session-start disabled by env/non-interactive")
         sys.exit(0)
 
     try:
@@ -728,6 +735,7 @@ def main():
             hook_input = {}
     except (json.JSONDecodeError, ValueError):
         hook_input = {}
+        hook_log("session-start stdin parse failed; using {}")
 
     # Try platform-specific env vars, hook cwd, fallback to cwd
     project_dir_env_vars = [
@@ -751,6 +759,9 @@ def main():
 
     trellis_dir = project_dir / ".trellis"
     context_key = _resolve_context_key(trellis_dir, hook_input)
+    hook_log(f"session-start project_dir={project_dir}")
+    hook_log(f"session-start trellis_dir={trellis_dir}")
+    hook_log(f"session-start context_key={context_key or '(none)'}")
     _persist_context_key_for_bash(context_key)
 
     # Load config for scope filtering and legacy detection
@@ -813,6 +824,8 @@ Context loaded. Follow <task-status>. Load workflow/spec/task details only when 
 </ready>""")
 
     context_text = output.getvalue()
+    hook_log(f"session-start task_status={task_status}")
+    hook_log(f"session-start emitted chars={len(context_text)}")
     result = {
         # Claude Code / Qoder / CodeBuddy / Droid / Gemini / Copilot format
         "hookSpecificOutput": {

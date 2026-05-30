@@ -34,6 +34,11 @@ import re
 import sys
 from pathlib import Path
 
+
+def hook_log(message: str) -> None:
+    if os.environ.get("TRELLIS_HOOK_DEBUG") == "1":
+        print(f"[trellis-hook] {message}", file=sys.stderr, flush=True)
+
 # Force UTF-8 on stdin/stdout/stderr on Windows. Default codepage there is
 # cp936 / cp1252 / etc. — non-ASCII content (Chinese task names, prd snippets)
 # both in stdin (hook payload from host CLI) and stdout (our emitted blocks)
@@ -301,25 +306,35 @@ def build_breadcrumb(
 # ---------------------------------------------------------------------------
 
 def main() -> int:
+    hook_log("inject-workflow-state start")
     if os.environ.get("TRELLIS_HOOKS") == "0" or os.environ.get("TRELLIS_DISABLE_HOOKS") == "1":
+        hook_log("inject-workflow-state disabled by env")
         return 0
 
     try:
         data = json.load(sys.stdin)
     except (json.JSONDecodeError, ValueError):
         data = {}
+        hook_log("inject-workflow-state stdin parse failed; using {}")
 
     cwd_str = data.get("cwd") or os.getcwd()
     cwd = Path(cwd_str)
+    hook_log(f"inject-workflow-state cwd={cwd}")
 
     root = find_trellis_root(cwd)
     if root is None:
+        hook_log("inject-workflow-state no trellis root found")
         return 0  # not a Trellis project
 
     templates = load_breadcrumbs(root)
     platform = _detect_platform(data)
     config = _read_trellis_config(root)
     task = get_active_task(root, data)
+    hook_log(f"inject-workflow-state platform={platform}")
+    hook_log(f"inject-workflow-state active_task={task}")
+    hook_log(
+        f"inject-workflow-state workflow_tags={','.join(sorted(templates.keys())) or '(none)'}"
+    )
     if task is None:
         # No active task — still emit a breadcrumb nudging AI toward
         # trellis-brainstorm + task.py create when user describes real work.
@@ -355,6 +370,9 @@ def main() -> int:
             "additionalContext": breadcrumb,
         }
     }
+    hook_log(
+        f"inject-workflow-state emitted event={hook_event_name} chars={len(breadcrumb)}"
+    )
     print(json.dumps(output))
     return 0
 

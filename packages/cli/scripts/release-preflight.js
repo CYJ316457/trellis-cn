@@ -3,9 +3,10 @@
  * Shared release / publish preflight.
  *
  * One source of truth for:
- *   1. Version match between `@mindfoldhq/trellis` and
- *      `@mindfoldhq/trellis-core` (and the current git tag when checked from
- *      a tag context).
+ *   1. Version match between the forked CLI package and the current git tag
+ *      when checked from a tag context. The CLI intentionally depends on the
+ *      official @mindfoldhq/trellis-core package instead of publishing a forked
+ *      core package.
  *   2. The npm dist-tag derived from the shared version (`beta`, `rc`,
  *      `alpha`, or `latest`).
  *   3. An idempotent publish plan that checks npm for each package + version
@@ -24,10 +25,9 @@
  *                                    skipped (but version mismatches still
  *                                    fail loudly).
  *   verify-packed-cli                Pack the CLI and assert its dependency
- *                                    on @mindfoldhq/trellis-core resolves
- *                                    to the exact shared version (not
- *                                    "workspace:*" or a loose range).
- *   verify-npm [--package all|core|cli]
+ *                                    on @mindfoldhq/trellis-core is pinned
+ *                                    to an exact published version.
+ *   verify-npm [--package cli]
  *                                    Verify the published package version and
  *                                    dist-tag are visible on the public npm
  *                                    registry. Used after CI publish so a
@@ -142,15 +142,6 @@ function fail(msg) {
 
 function checkVersions({ requireTag, quiet = false }) {
   const v = readVersions();
-  if (v.coreVersion !== v.cliVersion) {
-    fail(
-      `Version mismatch:\n` +
-        `  ${v.coreName}: ${v.coreVersion}\n` +
-        `  ${v.cliName}:  ${v.cliVersion}\n` +
-        `Both packages must share the exact same version. Re-run the release\n` +
-        `bump script so they move together.`,
-    );
-  }
   const tagVersion = tagVersionFromEnv();
   if (requireTag) {
     if (!tagVersion) {
@@ -163,7 +154,7 @@ function checkVersions({ requireTag, quiet = false }) {
     if (tagVersion !== v.cliVersion) {
       fail(
         `Git tag version (${tagVersion}) does not match package version (${v.cliVersion}).\n` +
-          `Refusing to publish: the tag, core package, and CLI package must agree.`,
+          `Refusing to publish: the tag and CLI package must agree.`,
       );
     }
   } else if (tagVersion && tagVersion !== v.cliVersion) {
@@ -173,7 +164,7 @@ function checkVersions({ requireTag, quiet = false }) {
   }
   if (!quiet) {
     console.log(
-      `${GREEN}ok${RESET} versions match: ${v.coreName}@${v.coreVersion} = ${v.cliName}@${v.cliVersion}` +
+      `${GREEN}ok${RESET} CLI version ready: ${v.cliName}@${v.cliVersion} depends on ${v.coreName}@${v.coreVersion}` +
         (tagVersion ? ` = git tag v${tagVersion}` : ""),
     );
   }
@@ -183,12 +174,10 @@ function checkVersions({ requireTag, quiet = false }) {
 function publishPlan({ output }) {
   const v = checkVersions({ requireTag: false, quiet: output === "json" });
   const tag = computeNpmTag(v.cliVersion);
-  const coreExists = npmVersionExists(v.coreName, v.coreVersion);
   const cliExists = npmVersionExists(v.cliName, v.cliVersion);
   const plan = {
     version: v.cliVersion,
     tag,
-    core: { name: v.coreName, publish: !coreExists, alreadyOnNpm: coreExists },
     cli: { name: v.cliName, publish: !cliExists, alreadyOnNpm: cliExists },
   };
   if (output === "json") {
@@ -203,9 +192,7 @@ function publishPlan({ output }) {
       [
         `version=${plan.version}`,
         `tag=${plan.tag}`,
-        `core_publish=${plan.core.publish}`,
         `cli_publish=${plan.cli.publish}`,
-        `core_already_on_npm=${plan.core.alreadyOnNpm}`,
         `cli_already_on_npm=${plan.cli.alreadyOnNpm}`,
       ].join("\n") + "\n",
     );
@@ -216,7 +203,6 @@ function publishPlan({ output }) {
       : `${YELLOW}skip (already on npm)${RESET}`;
   console.log(
     `${DIM}plan for v${plan.version} -> npm tag "${plan.tag}":${RESET}\n` +
-      `  ${plan.core.name}@${plan.version}: ${status(plan.core)}\n` +
       `  ${plan.cli.name}@${plan.version}:  ${status(plan.cli)}`,
   );
   return plan;
@@ -251,14 +237,13 @@ function verifyPackedCli() {
     if (!dep) {
       fail(`packed CLI is missing dependency on @mindfoldhq/trellis-core.`);
     }
-    if (dep !== v.cliVersion) {
+    if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(dep)) {
       fail(
-        `packed CLI depends on @mindfoldhq/trellis-core@"${dep}" but expected exact "${v.cliVersion}".\n` +
-          `pnpm should rewrite workspace:* to the exact published version; got "${dep}" instead.`,
+        `packed CLI depends on @mindfoldhq/trellis-core@"${dep}" but expected an exact published version.`,
       );
     }
     console.log(
-      `${GREEN}ok${RESET} packed CLI pins @mindfoldhq/trellis-core to exact ${v.cliVersion}.`,
+      `${GREEN}ok${RESET} packed CLI pins @mindfoldhq/trellis-core to exact ${dep}.`,
     );
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
@@ -268,10 +253,9 @@ function verifyPackedCli() {
 async function verifyNpm({ packageFilter }) {
   const v = checkVersions({ requireTag: false });
   const tag = computeNpmTag(v.cliVersion);
-  const packages = [
-    { key: "core", name: v.coreName },
-    { key: "cli", name: v.cliName },
-  ].filter((pkg) => packageFilter === "all" || pkg.key === packageFilter);
+  const packages = [{ key: "cli", name: v.cliName }].filter(
+    (pkg) => packageFilter === "cli",
+  );
 
   for (const pkg of packages) {
     await retry(`${pkg.name}@${v.cliVersion}`, () => {
@@ -304,7 +288,7 @@ async function main() {
         `  npm-tag\n` +
         `  publish-plan [--json|--github]\n` +
         `  verify-packed-cli\n` +
-        `  verify-npm [--package all|core|cli]\n`,
+        `  verify-npm [--package cli]\n`,
     );
     return;
   }
@@ -332,9 +316,9 @@ async function main() {
   }
   if (cmd === "verify-npm") {
     const packageIndex = rest.indexOf("--package");
-    const packageArg = packageIndex >= 0 ? rest[packageIndex + 1] : "all";
-    if (!["all", "core", "cli"].includes(packageArg)) {
-      fail(`--package must be one of: all, core, cli`);
+    const packageArg = packageIndex >= 0 ? rest[packageIndex + 1] : "cli";
+    if (packageArg !== "cli") {
+      fail(`--package must be cli for this forked CLI release script`);
     }
     await verifyNpm({ packageFilter: packageArg });
     return;

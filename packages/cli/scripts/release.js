@@ -86,7 +86,7 @@ function main() {
 
   const version = output(`node scripts/bump-versions.js ${type}`);
   run("node scripts/release-preflight.js check-versions");
-  run("git add package.json ../core/package.json");
+  run("git add package.json");
   run(`git commit -m "${version}"`);
   run(`git tag "v${version}"`);
   run(`git push origin ${pushTarget(type)} --tags`);

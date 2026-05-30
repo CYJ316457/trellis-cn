@@ -235,6 +235,10 @@ const SKILL_DESCRIPTIONS: Record<string, string> = {
     "Guides collaborative requirements discovery before implementation. Creates task directory, seeds PRD, asks high-value questions one at a time, researches technical choices, and converges on MVP scope. Use when requirements are unclear, there are multiple valid approaches, or the user describes a new feature or complex task.",
   check:
     "Comprehensive quality verification: spec compliance, lint, type-check, tests, cross-layer data flow, code reuse, and consistency checks. Use when code is written and needs quality verification, before committing changes, or to catch context drift during long sessions.",
+  "weekly-report":
+    "Generate a Chinese weekly report from the current Trellis developer workspace. Use when the user asks for weekly report or a recent work summary.",
+  "monthly-report":
+    "Generate a Chinese monthly report from the current Trellis developer workspace. Use when the user asks for monthly report or a month-to-date work summary.",
   "break-loop":
     "Deep bug analysis to break the fix-forget-repeat cycle. Analyzes root cause category, why fixes failed, prevention mechanisms, and captures knowledge into specs. Use after fixing a bug to prevent the same class of bugs.",
   "update-spec":
@@ -269,6 +273,8 @@ const COMMAND_DESCRIPTIONS: Record<string, string> = {
   continue: "Resume work on the current task at the correct phase.",
   "finish-work":
     "Wrap up the current session: quality gate, commit reminder, archive, journal.",
+  "weekly-report": "Generate a Chinese weekly report.",
+  "monthly-report": "Generate a Chinese monthly report.",
 };
 
 /** Wrap resolved command content with YAML frontmatter (name + description). */
